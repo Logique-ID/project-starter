@@ -1,0 +1,35 @@
+name: starter
+description: A starter brick for a new Flutter project with flavors (dev, stg, prod), Firebase, Riverpod, and more.
+version: 0.1.0+1
+
+environment:
+  mason: ^0.1.2
+
+# Variables specify dynamic values that your brick depends on.
+# Zero or more variables can be specified for a given brick.
+vars:
+  project_name:
+    type: string
+    description: The project name (snake_case, used in pubspec.yaml)
+    default: my_app
+    prompt: What is the project name?
+  app_name:
+    type: string
+    description: The display name shown on device
+    default: My App
+    prompt: What is the app display name?
+  app_id:
+    type: string
+    description: The bundle/application ID (e.g., com.example.myapp)
+    default: com.example.myapp
+    prompt: What is the app bundle ID?
+  custom_icon:
+    type: boolean
+    description: Whether to use a custom app icon
+    default: false
+    prompt: Do you want to use a custom app icon?
+  use_splash:
+    type: boolean
+    description: Use custom app splash
+    default: true
+    prompt: Use custom app splash

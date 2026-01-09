@@ -1,0 +1,1862 @@
+---
+globs: **/presentation/**/*.dart,**/common_widget/**/*.dart
+---
+# Flutter UI Patterns
+
+## Responsive Design
+
+Always use **Flutter ScreenUtil** for responsive sizing:
+
+- Width: `.w` extension (e.g., `16.w`)
+- Height: `.h` extension (e.g., `24.h`)
+- Font size: `.sp` extension (e.g., `14.sp`)
+- Radius: `.r` extension (e.g., `8.r`)
+
+Design size is configured in [app.dart](mdc:lib/src/app.dart) as `Size(360, 800)`.
+
+## Spacing
+
+Use predefined gap constants from [app_sizes.dart](mdc:lib/src/theme/app_sizes.dart):
+
+- Horizontal gaps: `gapW4`, `gapW8`, `gapW12`, `gapW16`, etc.
+- Vertical gaps: `gapH4`, `gapH8`, `gapH12`, `gapH16`, etc.
+
+Example:
+```dart
+Column(
+  children: [
+    Text('Title'),
+    gapH16,
+    Text('Content'),
+  ],
+)
+```
+
+## Theming
+
+Use theme constants from:
+
+- **Colors**: [app_color_theme.dart](mdc:lib/src/theme/app_color_theme.dart) - `AppColorTheme.primary500`, etc.
+- **Text Styles**: [app_text_theme.dart](mdc:lib/src/theme/app_text_theme.dart) - `AppTextTheme.boldBase`, etc.
+- **Sizes**: [app_sizes.dart](mdc:lib/src/theme/app_sizes.dart) - `Sizes.p16`, etc.
+
+Example:
+```dart
+Text(
+  'Hello',
+  style: AppTextTheme.boldBase.copyWith(
+    color: AppColorTheme.primary500,
+  ),
+)
+```
+
+## Localization
+
+Always use localization for user-facing strings:
+
+1. **Use `LocalizationMixin`** - The preferred way to access localization in UI layer
+2. Use generated keys: `loc.appTitle`, `loc.view_all`, etc.
+3. Add translations to `.arb` files in `lib/src/localization/`
+4. Run `flutter gen-l10n` to generate localization classes
+
+### Using LocalizationMixin
+
+The [LocalizationMixin](mdc:lib/src/core/mixins/localization_mixin.dart) provides all localization operations:
+
+```dart
+// ✅ Correct: Use LocalizationMixin in UI layer
+class HomeSubscreen extends ConsumerWidget with HomeEvent, HomeState, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref); // Get AppLocalizations
+    final locale = getLocale(ref); // Get locale string ('en' or 'id')
+    final localeNumber = getLocaleToNumber(ref); // Get locale number (en=2, id=1)
+    
+    // Change locale
+    await setLocalization('en', ref);
+    
+    return Text(loc.appTitle);
+  }
+}
+```
+
+**Available methods:**
+- `getLocalizations(WidgetRef ref)` - Returns `AppLocalizations` instance
+- `getLocale(WidgetRef ref)` - Returns locale string ('en' or 'id')
+- `getLocaleToNumber(WidgetRef ref)` - Returns locale number (en=2, id=1)
+- `setLocalization(String locale, WidgetRef ref)` - Changes app locale
+
+**Note**: Event/State mixins can use `ref.watch(appLocalizationsProvider)` directly since they're not UI layer files.
+
+Never hardcode user-facing strings. See [string_hardcoded.dart](mdc:lib/src/localization/string_hardcoded.dart) for exceptions.
+
+## Widget Structure
+
+### Screen Widgets
+
+- Use `ConsumerWidget` or `ConsumerStatefulWidget` for Riverpod integration
+- Use mixins for shared behavior (e.g., `with HomeEvent, HomeState`)
+- Extract complex UI into separate widget methods (prefixed with `_`)
+
+Example from [home_subscreen.dart](mdc:lib/src/feature/home/presentation/home_subscreen.dart):
+```dart
+class HomeSubscreen extends ConsumerWidget with HomeEvent, HomeState, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref); // From LocalizationMixin
+    // Implementation
+  }
+  
+  Widget _buildNewsList(AppLocalizations loc) {
+    // Private widget method
+  }
+}
+```
+
+## Riverpod Provider Access in UI Layer
+
+**IMPORTANT**: Never use `ref.watch()` or `ref.read()` directly in UI layer files.
+
+### Rules
+
+1. **`ref.watch()` and `ref.read()`**: Must be encapsulated in state/event mixins
+   - Create methods in `*_state.dart` mixins for `ref.watch()` calls
+   - Create methods in `*_event.dart` mixins for `ref.read()` calls
+   - Call these mixin methods from the UI layer
+
+2. **`ref.listen()`**: Allowed in UI layer for side effects
+   - Use for showing snackbars, navigation callbacks, handling async results, etc.
+   - Must be called in the `build` method, typically at the beginning after getting localization
+
+### Listening to Async Results
+
+When listening to controller providers that return `AsyncValue`, use this pattern to handle errors and success states:
+
+**Pattern for Async Operations** (`forgot_password_screen.dart` lines 30‑49):
+```dart
+ref.listen<AsyncValue>(forgotPasswordControllerProvider, (prev, next) {
+  // Handle error state
+  if (next is AsyncError) {
+    if (!next.isRefreshing && next.hasError) {
+      CustomSnackbar.show(
+        context,
+        CustomSnackbarMode.error,
+        next.error.toString(),
+      );
+    }
+  }
+  // Handle success state (transition from loading to data)
+  else if (next is AsyncData && prev is AsyncLoading) {
+    if (context.mounted) {
+      CustomSnackbar.show(
+        context,
+        CustomSnackbarMode.success,
+        next.value?.message ?? '',
+      );
+      context.pop(); // Navigate back on success
+    }
+  }
+});
+```
+
+**Key Points:**
+- **Error handling**: Check `next is AsyncError` and `!next.isRefreshing` to avoid showing errors during refresh
+- **Success handling**: Check `next is AsyncData && prev is AsyncLoading` to detect successful completion
+- **Context safety**: Always check `context.mounted` before navigation or context-dependent operations
+- **Message extraction**: Use `next.value?.message` for API response messages, or provide fallback strings
+- **Navigation**: Use `context.pop()` or `goToXxx(ref)` from event mixins after successful operations
+
+**Additional Examples:**
+- `help_desk_screen.dart` lines 36‑54: Help desk form submission
+- `account_screen.dart` lines 36‑54: Logout operation
+- `register_screen.dart` lines 42‑60: Registration form submission
+
+### Correct Pattern
+
+```dart
+// ✅ In *_state.dart mixin
+mixin class HomeState {
+  AsyncValue<NewsListResponse?> getNewsList(WidgetRef ref) =>
+      ref.watch(getNewsListProvider);
+}
+
+// ✅ In UI layer
+class HomeSubscreen extends ConsumerWidget with HomeState {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final newsList = getNewsList(ref); // Call mixin method
+    // ...
+  }
+}
+```
+
+### Incorrect Pattern
+
+```dart
+// ❌ Wrong: Direct ref.watch in UI layer
+class HomeSubscreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final newsList = ref.watch(getNewsListProvider); // Don't do this!
+    // ...
+  }
+}
+```
+
+### Common Widgets
+
+Reusable widgets should be placed in:
+- `lib/src/common_widget/` - App-wide reusable widgets
+- `lib/src/feature/*/presentation/widget/` - Feature-specific widgets
+
+## Navigation
+
+Use GoRouter for navigation via event mixins (never directly in UI layer):
+
+```dart
+// ✅ In *_event.dart mixin
+mixin class HomeEvent {
+  void goToNewsDetail(WidgetRef ref, String newsId) {
+    ref.read(goRouterProvider).goNamed(
+      AppRoute.newsDetail.name,
+      pathParameters: {'currentIndex': '0'},
+      queryParameters: {'newsId': newsId},
+    );
+  }
+}
+
+// ✅ In UI layer - call mixin method
+goToNewsDetail(ref, newsId);
+```
+
+Route definitions are in [app_router.dart](mdc:lib/src/routing/app_router.dart).
+
+## Loading States
+
+Use [AsyncValueWidget](mdc:lib/src/common_widget/async_value_widget.dart) for async data:
+
+```dart
+AsyncValueWidget(
+  value: getNewsList(ref),
+  data: (newsList) => ListView(/* ... */),
+  loading: () => CircularProgressIndicator(),
+  error: (error, stack) => ErrorWidget(error),
+)
+```
+
+### Shimmer Loading Placeholders
+
+For loading placeholders in lists, grids, or tables, use [ShimmerLoadingItem](mdc:lib/src/common_widget/shimmer_loading_item.dart) instead of `CircularProgressIndicator`:
+
+**Pattern with AsyncValueWidget:**
+```dart
+AsyncValueWidget(
+  value: getNewsList(ref),
+  customLoading: const ShimmerLoadingItem(), // Use shimmer for list loading
+  data: (newsList) => ListView(/* ... */),
+)
+```
+
+**Pattern with AsyncValue.when() (for paginated lists):**
+```dart
+ListView.builder(
+  itemCount: totalResults ?? 0,
+  itemBuilder: (context, index) {
+    final res = getPageValue(page);
+    return res.when(
+      loading: () => const ShimmerLoadingItem(), // Shimmer for each item
+      error: (error, stackTrace) => /* handle error */,
+      data: (response) => /* build item */,
+    );
+  },
+)
+```
+
+**Key Points:**
+- ✅ **Use for lists/grids**: `ShimmerLoadingItem` provides better UX for list-based loading
+- ✅ **Use in itemBuilder**: When using `AsyncValue.when()` inside `ListView.builder`, use shimmer for each loading item
+- ✅ **Consistent appearance**: Shimmer matches the layout structure of actual items
+- ✅ **Better than CircularProgressIndicator**: More appropriate for list-based content
+
+### Handling Empty Data and Errors
+
+When displaying lists or tables, show a single "No Data" message when:
+1. An error occurs during data loading
+2. The result is empty (no items)
+
+**Pattern for Paginated Lists (using AsyncValue.when()):**
+```dart
+ListView.builder(
+  itemCount: totalResults ?? 0,
+  itemBuilder: (context, index) {
+    final res = getPageValue(page);
+    return res.when(
+      // Show single "No data" message if page load failed (only on first item)
+      error: (error, stackTrace) => index == 0
+          ? Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Text(
+                'No Data'.hardcoded,
+                style: AppTextTheme.regularSm,
+                textAlign: TextAlign.center,
+              ),
+            )
+          : const SizedBox.shrink(), // Hide for other items
+      // Show loading shimmer while page is loading
+      loading: () => const ShimmerLoadingItem(),
+      // Build item when data is available
+      data: (response) {
+        final items = extractItems(response);
+        if (items == null || items.isEmpty) {
+          return index == 0
+              ? Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    'No Data'.hardcoded,
+                    style: AppTextTheme.regularSm,
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : const SizedBox.shrink();
+        }
+        // Build actual item
+        return ItemWidget(item: items[indexInPage]);
+      },
+    );
+  },
+)
+```
+
+**Pattern for Simple Lists (using AsyncValueWidget):**
+```dart
+AsyncValueWidget(
+  value: getDataList(ref),
+  data: (dataList) {
+    final items = dataList?.data ?? [];
+    // Show "No Data" if list is empty
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          'No Data'.hardcoded,
+          style: AppTextTheme.regularSm,
+        ),
+      );
+    }
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) => ItemWidget(item: items[index]),
+    );
+  },
+)
+```
+
+**Pattern for Initial Loading Check:**
+```dart
+// Check initial loading state before building list
+if (firstPageValue.isLoading ||
+    firstPageValue.isRefreshing ||
+    firstPageValue.isReloading) {
+  return const ShimmerLoadingItem(); // Or Center(child: CircularProgressIndicator())
+}
+
+// Check if data is empty
+final totalResults = extractTotal(firstPageValue.value);
+if (totalResults == 0) {
+  return Center(
+    child: Text(
+      'Data not found'.hardcoded,
+      style: AppTextTheme.regularSm,
+    ),
+  );
+}
+
+// Build list with data
+return ListView.builder(/* ... */);
+```
+
+**Key Points:**
+- ✅ **Show once**: Use `index == 0` check to show "No Data" message only once in paginated lists
+- ✅ **Use `SizedBox.shrink()`**: Return empty widget for other indices when showing error/empty message
+- ✅ **Consistent messaging**: Use hardcoded strings like `'No Data'.hardcoded` or `'Data not found'.hardcoded`
+- ✅ **Center alignment**: Center the message for better visibility
+- ✅ **Check both error and empty**: Handle both error states and empty data states
+- ✅ **Padding**: Add padding around the message for better spacing
+
+## Pagination Display Patterns
+
+This project uses **four standardized pagination layouts** to ensure every feature behaves consistently. All patterns share the same contract:
+
+### Common Contract for All Pagination Patterns
+
+Every paginated view requires these parameters:
+
+- **`firstPageValue`**: `AsyncValue` for page 1, used for initial loading/empty state checks
+- **`getPageValue`**: Callback `(int page) => AsyncValue<Response>` that fetches a specific page
+- **`extractTotal`**: Function `(Response?) => int?` that extracts total item count from API response
+- **`extractItems`**: Function `(Response?) => List<Item>?` that extracts the data list from API response
+- **`onRefresh`**: Callback `() async => void` that invalidates providers (must be in event mixin, never in UI)
+- **`buildItem`**: Function `(BuildContext, Item) => Widget` that renders a single item widget
+
+### Pattern 1: Standard ListView (Vertical Scrolling List)
+
+**Use when:** Displaying a simple paginated list without categories (e.g., notifications, tasks, reports)
+
+**Reference:** `notification_screen.dart`, `task_screen.dart`
+
+**Structure:**
+```dart
+class NotificationScreen extends ConsumerWidget 
+    with NotificationState, NotificationEvent, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref);
+    return Scaffold(
+      appBar: AppBar(/* ... */),
+      body: Column(
+        children: [
+          gapH16,
+          Expanded(
+            child: Consumer(
+              builder: (context, consRef, child) {
+                return CategorizedTabBodyView<NotificationResponse, NotificationData>(
+                  categoryId: 0, // No category
+                  viewType: ViewType.listView,
+                  firstPageValue: getNotificationList(consRef, page: 1),
+                  getPageValue: (page) => getNotificationList(consRef, page: page),
+                  extractTotal: (data) => data?.data?.total,
+                  extractItems: (data) => data?.data?.notificationData,
+                  onRefresh: () async => onRefresh(consRef),
+                  buildItem: (context, item) => ItemNotificationWidget(/* ... */),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**Key Points:**
+- Use `Column` with `gapH16` + `Expanded` + `Consumer` wrapper
+- Set `categoryId: 0` when no categories exist
+- Set `viewType: ViewType.listView` (default)
+- `CategorizedTabBodyView` handles infinite scroll, shimmer, empty states automatically
+- Always use `Consumer` to properly scope Riverpod refs
+
+### Pattern 2: TableView With Fixed Header & Filters
+
+**Use when:** Displaying tabular data with filterable columns and synchronized horizontal scrolling
+
+**Reference:** `newsletter_screen.dart`
+
+**Structure:**
+```dart
+class NewsletterScreen extends ConsumerWidget 
+    with NewsletterState, NewsletterEvent, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(/* ... */),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate available height for table
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          final appBarHeight = AppBar().preferredSize.height;
+          final statusBarHeight = MediaQuery.paddingOf(context).top;
+          final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+          final availableHeight = screenHeight - appBarHeight - statusBarHeight - keyboardHeight;
+          
+          final filterHeight = isFilterExpanded ? 450.h : 60.h;
+          final tableHeight = availableHeight - filterHeight - margins;
+          
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildFilterAccordion(loc), // Collapsible filter form
+                gapH16,
+                SizedBox(
+                  height: tableHeight,
+                  child: _buildTableWithPagination(context, ref),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  Widget _buildTableWithPagination(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref);
+    final firstPageValue = ref.watch(getNewsletterListProvider(page: 1));
+    
+    return NewsletterTableWithHeader(
+      firstPageValue: firstPageValue,
+      getPageValue: (page) => ref.watch(getNewsletterListProvider(page: page)),
+      extractTotal: (data) => data?.data?.total,
+      extractItems: (data) => data?.data?.data,
+      onRefresh: () async => ref.invalidate(getNewsletterListProvider(page: 1)),
+      onOpenAttachment: (pdfPath) => openAttachment(context, pdfPath),
+      loc: loc,
+    );
+  }
+}
+```
+
+**Key Points:**
+- Use `LayoutBuilder` to calculate dynamic table height based on screen size and filter state
+- Wrap table in fixed-height `SizedBox` to prevent layout overflow
+- `NewsletterTableWithHeader` synchronizes horizontal scroll between header and body rows
+- Filter form should be collapsible (accordion pattern) to maximize table space
+- `onRefresh` only invalidates page 1 to preserve filter state
+- Always pass `loc` for localized column headers
+
+### Pattern 3: GridView With Category Tabs
+
+**Use when:** Displaying categorized content in a grid layout with tab navigation
+
+**Reference:** `company_screen.dart`, `amenities_screen.dart`
+
+**Structure:**
+```dart
+class CompanyScreen extends ConsumerWidget 
+    with CompanyState, CompanyEvent, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref);
+    return Scaffold(
+      appBar: AppBar(/* ... */),
+      body: Consumer(
+        builder: (context, consRef, child) {
+          return CategorizedTabView<
+            CompanyCategoryListResponse,
+            CompanyCategoryData,
+            CompanyListResponse
+          >(
+            categoriesValue: getCompanyCategoryList(consRef),
+            extractCategories: (data) => data?.companyCategoryData,
+            buildTabBarViewChild: (context, consRef, category) {
+              return CategorizedTabBodyView<CompanyListResponse, CompanyData>(
+                categoryId: category.id ?? 0,
+                viewType: ViewType.gridView,
+                firstPageValue: getCompanyListByCategory(
+                  consRef,
+                  page: 1,
+                  categoryId: category.id ?? 0,
+                ),
+                getPageValue: (page) => getCompanyListByCategory(
+                  consRef,
+                  page: page,
+                  categoryId: category.id ?? 0,
+                ),
+                extractTotal: (data) => data?.data?.total,
+                extractItems: (data) => data?.data?.companyData,
+                onRefresh: () async => onRefresh(consRef, category.id ?? 0),
+                buildItem: (context, item) => ItemSpotWidget(/* ... */),
+              );
+            },
+            onSearchSubmitted: (value) => onSearchSubmitted(consRef, value ?? ''),
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+**Key Points:**
+- Use `CategorizedTabView` as top-level widget for tab management
+- `categoriesValue` fetches category list from state mixin
+- `extractCategories` maps API response to category list
+- `buildTabBarViewChild` returns `CategorizedTabBodyView` for each tab
+- Each tab has **isolated pagination** scoped to `category.id`
+- Set `viewType: ViewType.gridView` for 2-column grid layout
+- `onRefresh` invalidates both category list and active category's data
+- Optional `onSearchSubmitted` for search functionality across all tabs
+
+### Pattern 4: GridView Without Tabs (Simple Grid)
+
+**Use when:** Displaying grid content without categories (e.g., embed links, others)
+
+**Reference:** `embed_screen.dart`
+
+**Structure:**
+```dart
+class EmbedScreen extends ConsumerWidget 
+    with EmbedState, EmbedEvent, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref);
+    return Scaffold(
+      appBar: AppBar(/* ... */),
+      body: Column(
+        children: [
+          gapH16,
+          Expanded(
+            child: Consumer(
+              builder: (context, consRef, child) {
+                return CategorizedTabBodyView<EmbedListResponse, EmbedData>(
+                  categoryId: 0, // No category
+                  viewType: ViewType.gridView,
+                  itemAspectRatio: 1.1, // Optional: control tile proportions
+                  firstPageValue: getEmbedList(consRef, page: 1),
+                  getPageValue: (page) => getEmbedList(consRef, page: page),
+                  extractTotal: (data) => data?.data?.total,
+                  extractItems: (data) => data?.data?.data,
+                  onRefresh: () async => onRefresh(consRef),
+                  buildItem: (context, item) {
+                    final localeNumber = getLocaleToNumber(ref);
+                    final title = localeNumber == 1 ? item.titleId : item.titleEn;
+                    return ItemEmbedWidget(
+                      imageUrl: item.image ?? '',
+                      title: title ?? '',
+                      onTap: () => launchEmbedUrl(context, item.link, title ?? ''),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**Key Points:**
+- Similar to Pattern 1 (ListView) but with `viewType: ViewType.gridView`
+- Set `categoryId: 0` when no categories exist
+- Use `itemAspectRatio` to control grid tile width/height ratio (default is calculated automatically)
+- Locale-specific content (title/description) handled in `buildItem` via `LocalizationMixin`
+- Grid automatically displays 2 columns with responsive spacing
+
+### Pattern Selection Guide
+
+| Pattern | Use Case | Has Categories? | Layout | Example Features |
+|---------|----------|----------------|--------|------------------|
+| **Pattern 1: ListView** | Simple vertical list | No | Vertical scroll | Notifications, Tasks |
+| **Pattern 2: TableView** | Tabular data with filters | No | Table with fixed header | Newsletter, Reports |
+| **Pattern 3: GridView + Tabs** | Categorized grid content | Yes | Grid with tabs | Company, Amenities |
+| **Pattern 4: GridView** | Simple grid content | No | Grid without tabs | Embed/Others |
+
+### Benefits of These Patterns
+
+- ✅ **Consistent UX**: All features use the same pagination, loading, and error handling
+- ✅ **Automatic infinite scroll**: `CategorizedTabBodyView` handles pagination automatically
+- ✅ **Built-in shimmer states**: Loading placeholders shown during data fetch
+- ✅ **Empty/error handling**: Centralized "No Data" and error messages
+- ✅ **Pull-to-refresh**: Integrated refresh indicator (when `onRefresh` provided)
+- ✅ **Scroll position preservation**: PageStorageKey maintains scroll when switching tabs
+
+### Fetching Paginated Data From the API
+
+All paginated widgets rely on repository providers that follow a standardized contract. This ensures consistency across features and proper integration with the pagination UI patterns.
+
+#### Repository Provider Structure
+
+**1. Provider Declaration**
+
+Declare a `@riverpod` function that accepts a `page` parameter plus any filters (category ID, search keyword, etc.):
+
+```dart
+@riverpod
+Future<NotificationResponse?> getNotificationList(
+  Ref ref, {
+  required int page,
+}) async {
+  try {
+    final dio = ref.watch(dioConfigProvider);
+    final userId = ref.watch(authRepositoryProvider).currentUser?.userId;
+    
+    // Early return if required data is missing
+    if (userId == null) return null;
+
+    final response = await dio.post(
+      '/api/v1/getnotificationlist',
+      data: {
+        'user_id': userId,
+        'limit': Constants.limit,
+        'language_id': ref.watch(localeProviderToNumber),
+        'page': page,
+      },
+      cancelToken: ref.cancelToken(),
+    );
+    
+    return NotificationResponse.fromJson(response.data);
+  } on DioException catch (error) {
+    throw onDioError(error);
+  } catch (e) {
+    rethrow;
+  }
+}
+```
+
+**2. Required Request Payload Fields**
+
+Every paginated API call must include:
+
+- **`limit`**: Use `Constants.limit` (typically 10 or 20) for consistency across all features
+- **`page`**: Forward the method parameter directly (1-indexed)
+- **`language_id`**: Read from `ref.watch(localeProviderToNumber)` for localized responses
+- **Additional filters**: Read from `StateProvider`s (e.g., `categoryId`, `search`, `year`, `month`)
+
+**3. Cancel Token Management**
+
+Always use `ref.cancelToken()` to automatically cancel in-flight requests when:
+- Widget is disposed
+- User navigates away
+- New request is triggered
+
+```dart
+cancelToken: ref.cancelToken(), // Automatic cleanup
+```
+
+**4. Error Handling Pattern**
+
+Wrap all network calls in try-catch with proper error conversion:
+
+```dart
+try {
+  // API call
+} on DioException catch (error) {
+  throw onDioError(error); // Convert to user-friendly message
+} catch (e) {
+  rethrow; // Preserve unknown errors
+}
+```
+
+**Key Points:**
+- Keep repositories thin—no UI logic, no logging side effects
+- Return `null` for missing required data (e.g., `userId == null`)
+- Use `onDioError()` helper to convert `DioException` to readable error messages
+- Never catch errors silently—always rethrow or convert
+
+#### Filter State Management
+
+**5. Form-Driven Filter Submission Pattern**
+
+When filters should only apply after user taps a submit button (not on every dropdown change):
+
+**Step 1: Create Local StateProviders** (in screen file)
+```dart
+// Local state for form selections (not used by repository yet)
+final localCategoryIdProvider = StateProvider.autoDispose<int>((ref) => 0);
+final localYearProvider = StateProvider.autoDispose<int>((ref) => 0);
+final localMonthProvider = StateProvider.autoDispose<int>((ref) => 0);
+```
+
+**Step 2: Create Global StateProviders** (in controller file)
+```dart
+// Global state used by repository
+final newsletterCategoryIdProvider = StateProvider.autoDispose<int>((ref) => 0);
+final newsletterYearProvider = StateProvider.autoDispose<int>((ref) => 0);
+final newsletterMonthProvider = StateProvider.autoDispose<int>((ref) => 0);
+final newsletterKeywordProvider = StateProvider.autoDispose<String>((ref) => '');
+```
+
+**Step 3: Repository Reads Global Providers**
+```dart
+@riverpod
+Future<NewsletterResponse?> getNewsletterList(
+  Ref ref, {
+  required int page,
+}) async {
+  final dio = ref.watch(dioConfigProvider);
+  
+  // Read from global providers (not local ones)
+  final categoryId = ref.watch(newsletterCategoryIdProvider);
+  final search = ref.watch(newsletterKeywordProvider);
+  final month = ref.watch(newsletterMonthProvider);
+  final year = ref.watch(newsletterYearProvider);
+  
+  final response = await dio.post(
+    '/api/v1/getnewsletterlist',
+    data: {
+      'limit': Constants.limit,
+      'page': page,
+      'category_id': categoryId,
+      'search': search,
+      if (month != 0) 'month': month, // Conditional fields
+      if (year != 0) 'year': year,
+    },
+    cancelToken: ref.cancelToken(),
+  );
+  
+  return NewsletterResponse.fromJson(response.data);
+}
+```
+
+**Step 4: Event Mixin Copies Local → Global on Submit**
+
+```dart
+mixin class NewsletterEvent {
+  static const String keyKeyword = 'keyword';
+
+  Future<void> onSubmitSearchNewsletter(
+    WidgetRef ref,
+    GlobalKey<FormBuilderState> formKey,
+  ) async {
+    // 1. Unfocus keyboard
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    // 2. Validate form
+    if (formKey.currentState?.saveAndValidate() ?? false) {
+      // 3. Extract form values
+      final keyword = formKey.currentState!.value[keyKeyword] as String? ?? '';
+
+      // 4. Copy local state → global state (used by repository)
+      ref.read(newsletterKeywordProvider.notifier).state = keyword;
+      ref.read(newsletterCategoryIdProvider.notifier).state =
+          ref.read(localCategoryIdProvider);
+      ref.read(newsletterYearProvider.notifier).state =
+          ref.read(localYearProvider);
+      ref.read(newsletterMonthProvider.notifier).state =
+          ref.read(localMonthProvider);
+
+      // 5. Invalidate page 1 to trigger new API call with updated filters
+      ref.invalidate(getNewsletterListProvider(page: 1));
+    }
+  }
+}
+```
+
+**Why This Pattern?**
+
+This two-tier state approach ensures predictable filter behavior:
+
+- ✅ **No premature API calls**: Users can adjust dropdowns/dates without triggering requests
+- ✅ **Explicit submission**: API only fires when user taps "Search" button
+- ✅ **State isolation**: Local providers hold "draft" values, global providers hold "committed" values
+- ✅ **Repository simplicity**: Repository only reads global providers, never UI state
+- ✅ **Consistent UX**: All filterable features (newsletter, reports, etc.) behave the same way
+
+**When to Use:**
+- ✅ Use this pattern when filters have a submit button
+- ❌ Don't use for instant search (where each keystroke triggers API)
+- ❌ Don't use for category tabs (where tab change should immediately load data)
+
+## Item Widgets & Display Lists
+
+Every scrolling surface (paginated or not) must separate the **collection widget** from the **single-item widget** for maintainability and reusability.
+
+### Widget Separation Pattern
+
+**Collection Widget** (Screen/Subscreen)
+- Sets up the overall layout (AppBar, Scaffold, Column structure)
+- Fetches data via state mixins (`getNotificationList`, `getTaskList`, etc.)
+- Decides view type: `ListView`, `GridView`, or table
+- Handles pagination setup (`CategorizedTabBodyView` or `AsyncValueWidget`)
+- Manages pull-to-refresh and empty/error states
+
+**Item Widget** (Reusable Component)
+- Renders a single data item
+- Stateless and purely presentational
+- Filename starts with `item_` prefix
+- Lives in `feature/*/presentation/widget/` folder
+
+### Naming Conventions
+
+**Files** (snake_case):
+- `item_task_widget.dart`
+- `item_notification_widget.dart`
+- `item_embed_widget.dart`
+- `item_spot_widget.dart`
+- `item_news_widget.dart`
+- `item_event_widget.dart`
+- `item_report_widget.dart`
+
+**Classes** (PascalCase):
+- `ItemTaskWidget`
+- `ItemNotificationWidget`
+- `ItemEmbedWidget`
+- `ItemSpotWidget`
+- `ItemNewsWidget`
+- `ItemEventWidget`
+- `ItemReportWidget`
+
+**Domain Models** (for list items):
+- Files: `item_faq.dart` (not `faq_item.dart`)
+- Classes: `ItemFaq` (not `FaqItem`)
+
+**Imports:**
+```dart
+import 'package:mm2100_mobile/src/feature/task/presentation/widget/item_task_widget.dart';
+```
+
+### Building Item Widgets
+
+Follow these principles when creating item widgets:
+
+**1. Always Stateless**
+```dart
+class ItemTaskWidget extends StatelessWidget {
+  const ItemTaskWidget({super.key, required this.task, this.onTap});
+  
+  final TaskData task;
+  final VoidCallback? onTap;
+  
+  @override
+  Widget build(BuildContext context) {
+    // Render logic
+  }
+}
+```
+
+**2. Accept Domain Model + Callbacks**
+- Primary data: Domain model (e.g., `TaskData task`, `NotificationData notification`)
+- Interaction: Nullable `VoidCallback? onTap` for navigation
+- Avoid passing `WidgetRef` or state providers—keep it pure
+
+**3. Handle Formatting Locally**
+```dart
+@override
+Widget build(BuildContext context) {
+  // Format dates/numbers inside the widget
+  final formattedDate = CommonUtils.formatDateWithLocale(
+    task.date,
+    dateFormat: 'dd MMMM yyyy',
+  );
+  
+  return Container(/* ... */);
+}
+```
+
+**4. Use Theme Constants**
+```dart
+Text(
+  task.number ?? '-',
+  style: AppTextTheme.semiBoldBase.copyWith(
+    color: AppColorTheme.blackRock500,
+  ),
+)
+```
+
+**5. Encapsulate Repeated UI Elements**
+
+If the item has repeated chips/badges/tags, create private helper widgets/classes:
+
+```dart
+class ItemTaskWidget extends StatelessWidget {
+  // Main widget code
+  
+  Widget _buildInOutChip(String? value) {
+    if (value == null || value.isEmpty) return const SizedBox.shrink();
+    return Container(/* chip UI */);
+  }
+  
+  Color _statusChipColor(String? value) {
+    // Color logic
+  }
+}
+
+// Private helper class for complex chips
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.label,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+  
+  final String label;
+  final Color backgroundColor;
+  final Color textColor;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(/* ... */);
+  }
+}
+```
+
+### Wiring Item Widgets to Collections
+
+**For Paginated Lists:**
+```dart
+CategorizedTabBodyView<TaskResponse, TaskData>(
+  // ... pagination setup
+  buildItem: (context, item) => ItemTaskWidget(
+    task: item,
+    onTap: () => goToTaskDetail(ref, item.id),
+  ),
+)
+```
+
+**For Non-Paginated Lists:**
+```dart
+AsyncValueWidget(
+  value: getNewsList(ref),
+  data: (newsList) {
+    final items = newsList?.data ?? [];
+    return ListView.separated(
+      itemCount: items.length,
+      separatorBuilder: (context, index) => gapH8,
+      itemBuilder: (context, index) => ItemNewsWidget(
+        imageUrl: items[index].image ?? '',
+        categoryName: items[index].categoryName ?? '',
+        headline: items[index].headline ?? '',
+        date: items[index].date,
+        onTap: () => goToNewsDetail(ref, items[index].id),
+      ),
+    );
+  },
+)
+```
+
+### Reusability Benefits
+
+- ✅ **Consistent UI**: Same item widget used in multiple places (dashboard preview + full list screen)
+- ✅ **Easy testing**: Stateless widgets are easier to test in isolation
+- ✅ **Maintainable**: Changes to item design only need updating in one file
+- ✅ **Clear separation**: Collection handles data/pagination, item handles presentation
+- ✅ **Type-safe**: Domain model ensures compile-time safety
+
+### Example Structure
+
+```
+lib/src/feature/task/
+├── data/
+│   └── task_repository.dart
+├── domain/
+│   └── task_response.dart
+└── presentation/
+    ├── task_screen.dart              ← Collection widget
+    ├── controller/
+    │   ├── task_event.dart
+    │   └── task_state.dart
+    └── widget/
+        └── item_task_widget.dart     ← Item widget
+```
+
+## Images
+
+- **Network images**: Use `CachedNetworkImage` from `cached_network_image` package
+- **Assets**: Use `Image.asset()` with constants from [assets_constant.dart](mdc:lib/src/constant/assets_constant.dart)
+- **SVG**: Use `SvgPicture.asset()` from `flutter_svg`
+
+Always provide placeholder and error widgets for network images.
+
+### Image Picker Pattern
+
+For features that allow users to pick/capture images (e.g., profile pictures):
+
+1. **Use `image_picker` package**: Latest version from pub.dev
+2. **Show bottom sheet with options**: Gallery or Camera (`info_personal_event.dart` lines 22‑68)
+3. **Handle Android MainActivity destruction**: Call `retrieveLostData()` in `initState()` or before showing picker (only on Android with `Platform.isAndroid` checks)
+4. **Store image path in StateProvider**: Create `StateProvider.autoDispose<String?>` in controller for the selected image path
+5. **Display with conditional logic**: Show selected file, cached network image, or placeholder icon
+
+**Example Event Mixin Pattern** (`info_personal_event.dart` lines 38‑100):
+```dart
+Future<void> pickImage(BuildContext context, WidgetRef ref) async {
+  final ImagePicker picker = ImagePicker();
+
+  // Handle Android lost data (MainActivity destruction recovery)
+  // This is a secondary check - primary check happens when screen is mounted
+  // NOTE: retrieveLostData() is only implemented on Android, not on iOS or web
+  if (Platform.isAndroid) {
+    try {
+      final LostDataResponse lostData = await picker.retrieveLostData();
+      if (lostData.isEmpty == false) {
+        final List<XFile>? files = lostData.files;
+        if (files != null && files.isNotEmpty) {
+          // Lost data found - restore the selected image
+          setProfileImagePath(ref, files.first.path);
+          return;
+        } else if (lostData.exception != null) {
+          // Handle exception from lost data
+          CommonUtils.printAndRecordLog(
+            'Lost image picker exception: ${lostData.exception}',
+            '',
+          );
+        }
+      }
+    } catch (e, st) {
+      // Handle any errors from retrieveLostData
+      CommonUtils.printAndRecordLog(
+        'Error retrieving lost image data: $e',
+        st.toString(),
+      );
+    }
+  }
+
+  if (!context.mounted) return;
+
+  // Show bottom sheet for image source selection
+  final result = await showModalBottomSheet<ImageSource>(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Pick from Gallery'),
+            onTap: () => Navigator.pop(context, ImageSource.gallery),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Take Photo'),
+            onTap: () => Navigator.pop(context, ImageSource.camera),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  // Pick image and store path in StateProvider
+  if (result != null && context.mounted) {
+    final XFile? image = await picker.pickImage(source: result);
+    if (image != null) {
+      setProfileImagePath(ref, image.path);
+    }
+  }
+}
+```
+
+**Key Points:**
+- ✅ **Android lost data handling**: Always call `retrieveLostData()` on Android to recover from MainActivity destruction
+- ✅ **Platform check**: Use `Platform.isAndroid` before calling `retrieveLostData()` (iOS/web don't support it)
+- ✅ **Error handling**: Wrap `retrieveLostData()` in try-catch and log errors
+- ✅ **Context safety**: Check `context.mounted` before navigation-dependent operations
+- ✅ **StateProvider storage**: Store file path in `StateProvider.autoDispose<String?>` via event mixin setter
+- ✅ **Bottom sheet pattern**: Use `showModalBottomSheet` with `SafeArea` for image source selection
+
+**Example UI Pattern** (`info_personal_screen.dart` lines 110‑168):
+```dart
+Consumer(
+  builder: (context, consRef, child) {
+    final profileImagePath = consRef.watch(profileImagePathProvider);
+    
+    return GestureDetector(
+      onTap: () => pickImage(context, consRef),
+      child: Stack(
+        children: [
+          Container(
+            width: 100.w,
+            height: 100.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColorTheme.blackRock100, width: 2),
+            ),
+            child: ClipOval(
+              child: profileImagePath != null
+                  ? Image.file(File(profileImagePath), fit: BoxFit.cover)
+                  : !CommonUtils.isEmpty(originalImageUrl)
+                      ? CachedNetworkImage(
+                          imageUrl: originalImageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) => Image.asset(AssetsConstant.avatar),
+                        )
+                      : Icon(Icons.person, size: 50.w, color: AppColorTheme.blackRock300),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.all(4.w),
+              decoration: BoxDecoration(
+                color: AppColorTheme.primary500,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.camera_alt, size: 20.w, color: AppColorTheme.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+)
+```
+
+**Key Points:**
+- ✅ **Wrap in Consumer**: Rebuild when `profileImagePathProvider` changes
+- ✅ **Priority order**: Show selected file → original from API → placeholder icon
+- ✅ **Use `Image.file()`**: Display local file using `File(imagePath)` when path is available
+- ✅ **Use `CachedNetworkImage`**: Display original image from API URL when no local file
+- ✅ **Error handling**: Provide fallback placeholder for network image errors
+- ✅ **Visual feedback**: Add camera icon overlay to indicate image is tappable
+
+**File Upload Integration:**
+- The selected file path is stored in `StateProvider` and passed to controller on form submission
+- Controller conditionally uploads file using `FormData` with `MultipartFile` (see [File Upload Pattern](mdc:.cursor/rules/riverpod-patterns.mdc) in riverpod-patterns.mdc)
+
+**iOS Permissions** (`ios/Runner/Info.plist`):
+```xml
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to your photo library to update your profile picture</string>
+<key>NSCameraUsageDescription</key>
+<string>We need access to your camera to take a profile picture</string>
+```
+
+## Forms
+
+Use `flutter_form_builder` for form handling:
+- Custom form fields in `lib/src/common_widget/form/`
+- Validation with `form_builder_validators`
+- Localized error messages
+
+### Custom Form Fields
+
+- Always use the shared form widgets instead of creating ad‑hoc fields:
+  - `CustomDropdownFormField` for any dropdown (`register_screen.dart` lines 155‑170).
+  - `CustomTextFormField` for text/textarea inputs (`help_desk_screen.dart` lines 96‑137).
+  - `CustomDatePickerField` for date selection (`register_screen.dart` lines 195‑205).
+- These widgets already apply spacing, theming, and validation styles. Pass localization titles/hints (e.g. `*${loc.category}`) and surface validation errors via their `errorValidation` parameter for dropdowns/date pickers or built‑in validators for text fields.
+
+### State Management for Form Inputs
+
+- When a form needs to reuse dropdown selections, date picker values, or other form inputs (e.g. submit to repository), declare `StateProvider.autoDispose` fields in the feature controller file. Examples:
+  - `help_desk_controller.dart` lines 6‑17 create `helpDeskCategoryProvider`, `helpDeskSubCategoryProvider`, `helpDeskShowErrorsProvider`.
+  - `register_controller.dart` line 8 creates `dateOfBirthProvider` for date selection.
+- Read these providers inside repositories instead of passing raw values through every method. Example: `help_desk_repository.dart` lines 19‑20 read the selected categories before calling `/api/v1/sendfeedback`.
+- Expose helper getters in the feature `*_state.dart` mixin and setters in the feature `*_event.dart` so UI widgets can update the providers without direct `ref.watch`. Example: `register_state.dart` line 14 exposes `getDateOfBirth()` and `register_event.dart` line 90 exposes `setDateOfBirth()`.
+
+### Form-Driven Filter Submission Pattern
+
+When filters should only apply after user taps a submit button (not on every dropdown change), use a **two-tier StateProvider pattern**:
+
+**1. Local StateProviders** (in screen/widget file):
+- Defined in the screen or dialog widget file (e.g., `newsletter_screen.dart`, `task_filter_dialog.dart`)
+- Used for immediate UI updates when dropdowns change
+- **NOT** used by repository for API calls
+- Example: `localCategoryIdProvider`, `localTaskSourceProvider`
+
+**2. Global StateProviders** (in controller file):
+- Defined in the feature controller file (e.g., `newsletter_controller.dart`, `task_controller.dart`)
+- Used by repository for API filtering
+- Only updated when submit button is pressed
+- Example: `newsletterCategoryIdProvider`, `taskSourceProvider`
+
+**Pattern Implementation:**
+
+**Step 1: Define Local Providers** (in screen/widget file):
+```dart
+// Local StateProviders for form field selections (stored locally, not in global providers)
+// These values are only updated when the search button is pressed
+// They are used to immediately update the UI when dropdowns change
+final localCategoryIdProvider = StateProvider.autoDispose<int>((ref) => 0);
+final localTaskSourceProvider = StateProvider.autoDispose<String?>((ref) => null);
+```
+
+**Step 2: Define Global Providers** (in controller file):
+```dart
+// Global StateProviders used by repository for API filtering
+final newsletterCategoryIdProvider = StateProvider.autoDispose<int>((ref) => 0);
+final taskSourceProvider = StateProvider.autoDispose<String?>((ref) => null);
+```
+
+**Step 3: Add Local Provider Getters/Setters** (in state/event mixins):
+```dart
+// In *_state.dart mixin
+mixin class TaskState {
+  String? getLocalSelectedTaskSource(WidgetRef ref) =>
+      ref.watch(localTaskSourceProvider);
+}
+
+// In *_event.dart mixin
+mixin class TaskEvent {
+  void setLocalSelectedTaskSource(WidgetRef ref, String? source) {
+    ref.read(localTaskSourceProvider.notifier).state = source;
+  }
+}
+```
+
+**Step 4: Use Local Providers in UI** (dropdowns update local providers):
+```dart
+CustomDropdownFormField<ItemDropdown>(
+  title: 'Source'.hardcoded,
+  hintText: 'Select source'.hardcoded,
+  items: items,
+  valueId: getLocalSelectedTaskSource(consRef), // Read from local provider
+  onChanged: (item) {
+    setLocalSelectedTaskSource(consRef, item?.id); // Update local provider immediately
+  },
+)
+```
+
+**Step 5: Submit Handler** (copy local → global, read textfield from formKey):
+```dart
+Future<void> submitFilter(
+  WidgetRef ref,
+  GlobalKey<FormBuilderState> formKey,
+) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  formKey.currentState?.save();
+  final values = formKey.currentState!.value;
+  
+  // Read textfield value from formKey
+  final keywordValue = values[TaskEvent.keyKeyword] as String?;
+  
+  // Read dropdown values from local providers
+  final taskState = TaskState();
+  final source = taskState.getLocalSelectedTaskSource(ref);
+  final departmentId = taskState.getLocalSelectedTaskDepartmentId(ref);
+  
+  // Copy local providers to global providers (used by repository)
+  ref.read(taskKeywordProvider.notifier).state = keywordValue;
+  ref.read(taskSourceProvider.notifier).state = source;
+  ref.read(taskDepartmentIdProvider.notifier).state = departmentId;
+  
+  // Invalidate to trigger new API call with filters
+  ref.invalidate(getTaskListProvider(page: 1));
+}
+```
+
+**Key Points:**
+- ✅ **Local providers**: Update immediately on dropdown change for UI feedback
+- ✅ **Global providers**: Only updated on submit, used by repository for API calls
+- ✅ **TextField values**: Read from `formKey.currentState!.value` on submit
+- ✅ **Dropdown values**: Read from local providers on submit, then copy to global
+- ✅ **Separation of concerns**: UI state (local) vs API state (global)
+- ✅ **No premature API calls**: Filters only apply when user explicitly submits
+
+**Reference Examples:**
+- `newsletter_screen.dart` lines 25‑27: Local providers definition
+- `newsletter_event.dart` lines 15‑25: Local provider setters
+- `newsletter_event.dart` lines 27‑48: Submit handler pattern
+- `task_filter_dialog.dart`: Complete implementation example
+
+### Pre-filling Forms with API Data
+
+When a form needs to be pre-filled with data from an API:
+
+1. **Wrap form in `AsyncValueWidget`**: Load the data first, then render the form once data is available (`info_personal_screen.dart` lines 87‑292).
+2. **Set `initialValue` on FormBuilder fields**: Use the fetched data to pre-fill text fields (`info_personal_screen.dart` lines 182‑189, 192‑202, 245‑255, 258‑267).
+3. **Pre-fill StateProviders in repository**: For dropdown/date picker fields managed by `StateProvider`, set their values **in the repository** immediately after parsing the API response (`info_personal_repository.dart` lines 29‑31). This ensures the state is ready before the UI renders. Make sure StateProviders is auto disposed
+4. **Access values via form key in events**: Read FormBuilder field values using `formKey.currentState!.value['keyName']` in event mixins when submitting (`info_personal_event.dart` lines 70‑73, 96‑110).
+
+**Example Repository Pattern:**
+```dart
+@riverpod
+Future<CustomerDetailResponse?> getCustomerDetail(Ref ref) async {
+  // ... API call
+  final result = CustomerDetailResponse.fromJson(response.data);
+  
+  // ✅ Pre-fill StateProviders immediately after parsing
+  ref.watch(genderProvider.notifier).state = result.data?.customer?.gender;
+  ref.watch(dateOfBirthProvider.notifier).state = result.data?.customer?.dateOfBirth;
+  
+  return result;
+}
+```
+
+**Example UI Pattern:**
+```dart
+AsyncValueWidget(
+  value: getCustomerDetail(ref), // Fetch data first
+  data: (customerDetail) {
+    final user = customerDetail?.data?.user;
+    return FormBuilder(
+      key: _formKey,
+      child: Column(
+        children: [
+          CustomTextFormField(
+            initialValue: user?.fullname, // Pre-fill from API
+            name: keyFullName,
+            // ...
+          ),
+          Consumer(
+            builder: (context, consRef, child) {
+              return CustomDropdownFormField(
+                valueId: getGender(consRef), // Already set in repository
+                // ...
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  },
+)
+```
+
+### Rebuilding Form Widgets
+
+- Wrap dropdowns, date pickers, and buttons that depend on provider state in a `Consumer` (or use a `ConsumerWidget`) so they rebuild correctly and only rebuild necessary part when the providers change. See:
+  - `register_screen.dart` lines 155‑170 for dropdown rebuild.
+  - `register_screen.dart` lines 195‑205 for date picker rebuild with state management.
+  - `register_screen.dart` lines 228‑247 for buttons that reflect controller loading state.
+  - `info_personal_screen.dart` lines 205‑224, 227‑242, 270‑284 for comprehensive form rebuild patterns.
+- Apply the same pattern for other features (e.g. Help Desk form) so validation and button states update predictably.
+
+**Date Picker Pattern:**
+```dart
+Consumer(
+  builder: (context, consRef, child) {
+    return CustomDatePickerField(
+      initialValue: getDateOfBirth(consRef), // From state mixin
+      title: '*${loc.dob}',
+      onSetDateResult: (value) {
+        setDateOfBirth(consRef, value ?? ''); // From event mixin
+      },
+      errorValidation: showErrors && getDateOfBirth(consRef) == null
+          ? loc.please_complete
+          : null,
+    );
+  },
+)
+```
+
+### Form Validation Pattern
+
+**Validation logic must be placed in event mixins** (`*_event.dart`), not in the UI layer. Follow this pattern:
+
+**In Event Mixin** (`help_desk_event.dart` lines 20‑51):
+```dart
+Future<void> submitHelpDesk(
+  WidgetRef ref, {
+  required GlobalKey<FormBuilderState> formKey,
+}) async {
+  // 1. Unfocus keyboard first
+  FocusManager.instance.primaryFocus?.unfocus();
+  
+  // 2. Set show errors flag to trigger validation display
+  ref.read(helpDeskShowErrorsProvider.notifier).state = true;
+  
+  // 3. Validate form builder fields
+  if (formKey.currentState?.saveAndValidate() ?? false) {
+    try {
+      // 4. Extract form values
+      final message = formKey.currentState!.value['message'] as String?;
+      
+      // 5. Read StateProvider values (for dropdowns)
+      final firstCategory = ref.read(helpDeskCategoryProvider);
+      final secondCategory = ref.read(helpDeskSubCategoryProvider);
+      
+      // 6. Additional validation: Check all required fields
+      if (message == null ||
+          message.isEmpty ||
+          firstCategory == null ||
+          secondCategory == null) {
+        return; // Stop if validation fails
+      }
+      
+      // 7. Proceed with API call
+      await ref.watch(helpDeskControllerProvider.notifier)
+          .sendFeedback(message: message);
+      
+      // 8. Reset show errors flag on success
+      ref.read(helpDeskShowErrorsProvider.notifier).state = false;
+    } catch (e, st) {
+      CommonUtils.printAndRecordLog(e, st.toString());
+      rethrow;
+    }
+  }
+}
+```
+
+**In UI Layer** (`help_desk_screen.dart` lines 113‑115):
+- Conditionally display validation errors based on `showErrors` flag and field value:
+```dart
+CustomDropdownFormField(
+  // ... other properties
+  errorValidation: showErrors && selectedSubCategory == null
+      ? loc.please_complete
+      : null,
+)
+```
+
+**Key Points:**
+- Always unfocus keyboard before validation: `FocusManager.instance.primaryFocus?.unfocus();`
+- Use a `StateProvider.autoDispose<bool>` (e.g., `helpDeskShowErrorsProvider`) to control when validation errors are displayed
+- Set `showErrors = true` before validation, reset to `false` on successful submission
+- Validate both FormBuilder fields (`saveAndValidate()`) AND StateProvider values (dropdown selections)
+- Display errors conditionally: `errorValidation: showErrors && fieldIsInvalid ? errorMessage : null`
+- Clear errors when user interacts with fields: `setShowHelpDeskErrors(ref, false)` in `onChanged` callbacks
+
+## Pull-to-Refresh Pattern
+
+Use the [`any_refreshable_widget`](https://pub.dev/packages/any_refreshable_widget) package (published by logique.co.id) for implementing pull-to-refresh functionality.
+
+### Setup
+
+**1. Add dependency** (`pubspec.yaml`):
+```yaml
+dependencies:
+  any_refreshable_widget: ^0.2.0
+```
+
+**2. Create refresh method in event mixin** (`*_event.dart`):
+```dart
+Future<void> refreshHome(WidgetRef ref) async {
+  await Future.wait([
+    ref.refresh(getBannerListProvider.future),
+    ref.refresh(getNewsListProvider.future),
+    ref.refresh(getEventListProvider.future),
+  ]);
+}
+```
+
+**Key Points:**
+- Use `ref.refresh(provider.future)` instead of `ref.invalidate()` for better control
+- Use `Future.wait([...])` to refresh multiple providers concurrently
+- Method must return `Future<void>` for async operation
+- Place in event mixin, not directly in UI
+
+**3. Wrap screen body with `AnyRefreshableWidget.single`** (`*_screen.dart`):
+```dart
+import 'package:any_refreshable_widget/any_refreshable_widget.dart';
+
+return Scaffold(
+  body: AnyRefreshableWidget.single(
+    onRefresh: () async => await refreshHome(ref),
+    refreshColor: AppColorTheme.primary500,
+    backgroundColor: AppColorTheme.white,
+    builder: (context, isLoading, error) {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            // Your content here
+          ],
+        ),
+      );
+    },
+  ),
+);
+```
+
+### Layout Structure Requirements
+
+**IMPORTANT**: When using `AnyRefreshableWidget`, the builder must return a scrollable widget structure:
+
+❌ **Wrong** - Will cause "RenderFlex unbounded height" error:
+```dart
+AnyRefreshableWidget.single(
+  builder: (context, isLoading, error) {
+    return Column(              // ❌ Column with Expanded
+      children: [
+        SizedBox(height: 200),
+        Expanded(               // ❌ Expanded in scrollable context
+          child: ListView(...), // ❌ Nested scrollable
+        ),
+      ],
+    );
+  },
+)
+```
+
+✅ **Correct** - Use `SingleChildScrollView` with `Column`:
+```dart
+AnyRefreshableWidget.single(
+  builder: (context, isLoading, error) {
+    return SingleChildScrollView(  // ✅ Single scrollable parent
+      child: Column(                // ✅ Column without Expanded
+        children: [
+          SizedBox(height: 200),
+          Padding(                  // ✅ Use Padding instead of ListView
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
+              children: [
+                // All content here
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+)
+```
+
+### Complete Example Pattern
+
+Reference: `home_subscreen.dart` lines 40-116
+
+```dart
+class HomeSubscreen extends ConsumerWidget with HomeEvent, HomeState {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: AnyRefreshableWidget.single(
+        onRefresh: () async => await refreshHome(ref), // From event mixin
+        refreshColor: AppColorTheme.primary500,
+        backgroundColor: AppColorTheme.white,
+        builder: (context, isLoading, error) {
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Fixed height sections
+                    SizedBox(height: 300, child: CarouselSection()),
+                    
+                    // Content sections
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Column(
+                        children: [
+                          MenuWidget(),
+                          NewsListWidget(),
+                          EventListWidget(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Optional: Floating elements
+              Positioned(
+                top: 100,
+                child: FloatingCard(),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+### Key Benefits
+
+- ✅ **Concurrent refresh**: Multiple providers refresh simultaneously
+- ✅ **Themed indicator**: Matches app design system
+- ✅ **Smooth UX**: Proper loading states and error handling
+- ✅ **Event mixin pattern**: Follows project architecture
+- ✅ **Single scrollable**: Avoids layout conflicts
+
+## Conditional UI Rendering Based on Authentication
+
+Use `StreamBuilder` with `getAppUserStream` to conditionally show/hide UI sections based on authentication state.
+
+### Pattern
+
+**In Home Screen** (`home_subscreen.dart`):
+```dart
+Consumer(
+  builder: (context, consRef, child) {
+    return StreamBuilder(
+      stream: getAppUserStream(consRef),
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data != null) {
+          return Column(
+            children: [gapH16, _buildReportList(loc)],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  },
+)
+```
+
+**Key Points:**
+- ✅ **Use `StreamBuilder`**: Provides reactive updates when auth state changes
+- ✅ **Check both `hasData` and `data != null`**: Ensures data exists and is not null
+- ✅ **Return `SizedBox.shrink()`**: When condition is false, return empty widget instead of null
+- ✅ **Wrap in `Consumer`**: If accessing Riverpod providers inside the builder
+
+## Horizontal Scrolling Lists
+
+Use `ListView.separated` with `Axis.horizontal` for horizontal scrolling lists with spacing between items.
+
+### Pattern
+
+```dart
+SizedBox(
+  height: MediaQuery.sizeOf(context).height * 0.3, // Fixed height
+  child: ListView.separated(
+    scrollDirection: Axis.horizontal,
+    itemCount: items.length,
+    separatorBuilder: (context, index) => gapW16, // Spacing between items
+    itemBuilder: (context, index) {
+      final item = items[index];
+      return SizedBox(
+        width: MediaQuery.sizeOf(context).width * 0.7, // Item width
+        child: ItemWidget(
+          // ... item properties
+        ),
+      );
+    },
+  ),
+)
+```
+
+**Key Points:**
+- ✅ **Use `ListView.separated`**: Better than `ListView.builder` when you need spacing
+- ✅ **Set fixed height**: Required for horizontal `ListView`
+- ✅ **Set item width**: Use `SizedBox` with percentage-based width (e.g., 70% of screen width)
+- ✅ **Use gap constants**: Use `gapW16`, `gapW8`, etc. for consistent spacing
+
+## Widget Extraction for Large Screens
+
+When screens become too large (>300 lines), extract complex widgets into separate files in the `widget/` folder.
+
+### Pattern
+
+**Before** (large screen file):
+```dart
+class NewsletterScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Column(
+        children: [
+          _buildFilterSection(), // 100+ lines
+          _buildTableSection(), // 200+ lines
+        ],
+      ),
+    );
+  }
+}
+```
+
+**After** (extracted widgets):
+```dart
+// newsletter_screen.dart
+class NewsletterScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Column(
+        children: [
+          NewsletterFilterSection(),
+          NewsletterTableSection(),
+        ],
+      ),
+    );
+  }
+}
+
+// widget/newsletter_filter_section.dart
+class NewsletterFilterSection extends StatelessWidget {
+  // Extracted filter widget
+}
+
+// widget/newsletter_table_section.dart
+class NewsletterTableSection extends StatelessWidget {
+  // Extracted table widget
+}
+```
+
+**Key Points:**
+- ✅ **Extract when >300 lines**: Keep screen files focused and maintainable
+- ✅ **Place in `widget/` folder**: Feature-specific widgets go in `feature/*/presentation/widget/`
+- ✅ **Use descriptive names**: Widget names should clearly indicate their purpose
+- ✅ **Add comments**: Document complex widgets with class-level comments
+
+## Accordion-Style Expandable Sections
+
+Use `AnimatedAlign` with `heightFactor` and `AnimatedRotation` for accordion-style expandable/collapsible sections.
+
+### Pattern
+
+```dart
+final isExpandedProvider = StateProvider.autoDispose<bool>((ref) => true);
+
+// In build method
+Container(
+  child: Column(
+    children: [
+      InkWell(
+        onTap: () => toggleFilterVisibility(ref),
+        child: Row(
+          children: [
+            Text('Filters'),
+            const Spacer(),
+            AnimatedRotation(
+              turns: isExpanded ? 0 : -0.25,
+              duration: const Duration(milliseconds: 250),
+              child: Icon(Icons.keyboard_arrow_down),
+            ),
+          ],
+        ),
+      ),
+      ClipRect(
+        child: AnimatedAlign(
+          alignment: Alignment.topCenter,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          heightFactor: isExpanded ? 1 : 0, // Controls expansion
+          child: FormBuilder(
+            // Form content here
+          ),
+        ),
+      ),
+    ],
+  ),
+)
+```
+
+**Key Points:**
+- ✅ **Use `AnimatedAlign` with `heightFactor`**: Smoothly expands/collapses content
+- ✅ **Wrap in `ClipRect`**: Prevents overflow during animation
+- ✅ **Use `AnimatedRotation`**: Rotates arrow icon to indicate state
+- ✅ **StateProvider for state**: Use `StateProvider.autoDispose<bool>` to manage expanded state
+- ✅ **Smooth animations**: Use `Curves.easeInOut` for natural feel
+
+## Table Display with Synchronized Scrolling
+
+For tables with horizontal scrolling, use separate scroll controllers and `NotificationListener` to synchronize header and body scrolling.
+
+### Pattern
+
+```dart
+final headerScrollController = ScrollController();
+final bodyScrollController = ScrollController();
+
+// Listen to body scroll and sync header
+NotificationListener<ScrollNotification>(
+  onNotification: (notification) {
+    if (notification is ScrollUpdateNotification) {
+      headerScrollController.jumpTo(bodyScrollController.offset);
+    }
+    return false;
+  },
+  child: SingleChildScrollView(
+    controller: bodyScrollController,
+    scrollDirection: Axis.horizontal,
+    child: Table(
+      // Table body
+    ),
+  ),
+)
+
+// Header with separate controller
+SingleChildScrollView(
+  controller: headerScrollController,
+  scrollDirection: Axis.horizontal,
+  child: TableHeader(),
+)
+```
+
+**Key Points:**
+- ✅ **Separate controllers**: One for header, one for body
+- ✅ **Use `NotificationListener`**: Captures scroll events from body
+- ✅ **Use `jumpTo`**: Synchronizes header position with body
+- ✅ **Handle `ScrollUpdateNotification`**: Only sync on scroll updates, not all notifications
+
+## AppBar Patterns
+
+### Platform-Specific Back Button
+
+Always use platform-specific back icons in AppBar leading:
+
+```dart
+AppBar(
+  backgroundColor: AppColorTheme.primary500,
+  leading: IconButton(
+    onPressed: () => context.pop(),
+    icon: Icon(
+      Platform.isIOS ? Icons.arrow_back_ios : Icons.arrow_back,
+      color: AppColorTheme.white,
+    ),
+  ),
+  title: Text(
+    loc.personal_info,
+    style: AppTextTheme.semiBoldBase.copyWith(color: AppColorTheme.white),
+  ),
+)
+```
+
+- iOS: Use `Icons.arrow_back_ios`
+- Android: Use `Icons.arrow_back`
+- Import `dart:io` to access `Platform`
+- Always apply theming colors consistently (e.g., `AppColorTheme.white` for icons and title text on primary background)

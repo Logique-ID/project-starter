@@ -1,0 +1,72 @@
+# 0.1.0+1
+
+Initial release of the Flutter Starter Brick.
+
+## Features
+
+### Core Architecture
+- **Flavors**: Development (dev), Staging (stg), and Production (prod) environments with flutter_flavorizr
+- **State Management**: Riverpod 3.0.3 with code generation (riverpod_generator)
+- **Routing**: GoRouter 17.0.0 with shell route navigation
+- **Local Database**: Sembast 3.8.5+2 with AES encryption support
+- **HTTP Client**: Dio 5.9.0 with Alice debugging integration
+
+### Firebase Integration
+- Firebase Core 4.2.1
+- Firebase Messaging 16.0.4
+- Local notifications via flutter_local_notifications 19.5.0
+- FlutterFire CLI auto-configuration for all flavors via shell script
+
+### UI & Design
+- Responsive design with Flutter ScreenUtil 5.9.3
+- Custom launcher icons via flutter_launcher_icons 0.14.4 (iOS light/dark support)
+- Native splash screen via flutter_native_splash 2.4.7 (Android 12+ support)
+- Google Fonts 6.3.2
+- SVG support via flutter_svg 2.2.2
+- Material Design theming with custom color and text themes
+
+### Forms & Validation
+- flutter_form_builder 10.2.0
+- form_builder_validators 11.2.0
+- Pre-built custom text form field widget
+
+### Localization
+- English and Indonesian language support
+- ARB-based localization with Flutter's built-in l10n
+- Localization context extension for easy access
+
+### Project Structure
+- Feature-based architecture with data/domain/presentation layers
+- Pre-configured common widgets (buttons, snackbar, async value widget)
+- Core mixins for router, startup, localization, and connection listener
+- Service layer for Firebase and notifications
+
+### Development Tools
+- Pre-configured VSCode settings and launch configurations for all flavors
+- Cursor IDE rules for project structure, Dart conventions, Flutter UI patterns, Riverpod patterns, and routing
+- Analysis options with flutter_lints 5.0.0
+- Build runner 2.10.2 for code generation
+
+### Mason Hooks
+- **Pre-generation**: Prompts for Firebase project ID, custom app icon path, and splash image path
+- **Post-generation**: 
+  - Auto-creates Kotlin package directory structure from app_id
+  - Runs FlutterFire CLI configuration for all flavors
+  - Generates launcher icons from custom image
+  - Creates native splash screen from custom image
+
+### Template Variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `project_name` | Project name (snake_case) | `my_app` |
+| `app_name` | Display name on device | `My App` |
+| `app_id` | Bundle/application ID | `com.example.myapp` |
+| `custom_icon` | Use custom app icon | `false` |
+| `use_splash` | Use custom splash screen | `true` |
+
+### Included Feature Modules
+- Authentication (auth repository with app user model)
+- Login (complete with controller, state, and events)
+- Main navigation with bottom nav bar (lazy load indexed stack)
+- Home, Berita, Kegiatan, Laporan, FAQ subscreens
+

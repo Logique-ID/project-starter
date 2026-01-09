@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+---
+# MM2100 Mobile Project Structure
+
+This is a Flutter mobile application built with a feature-based architecture.
+
+## Project Overview
+
+- **Framework**: Flutter 3.38.0+
+- **Language**: Dart 3.8.1+
+- **State Management**: Riverpod 3.0.3 (with code generation)
+- **Routing**: GoRouter 17.0.0
+- **Local Database**: Sembast 3.8.5+2
+- **HTTP Client**: Dio 5.9.0
+- **Responsive Design**: Flutter ScreenUtil 5.9.3
+
+## Directory Structure
+
+The main source code is located in `lib/src/`:
+
+- **`app.dart`**: Main application widget with MaterialApp.router setup
+- **`common_widget/`**: Reusable widgets used across features
+- **`constant/`**: App constants (assets, error messages, etc.)
+- **`core/`**: Core mixins and utilities (router_mixin, startup_mixin, etc.)
+- **`feature/`**: Feature modules organized by domain
+- **`localization/`**: Localization files and providers (en, id)
+- **`routing/`**: GoRouter configuration and route definitions
+- **`service/`**: Services (Firebase, notifications)
+- **`theme/`**: App theming (colors, text styles, sizes)
+- **`utils/`**: Utility functions and configurations
+
+## Feature Module Structure
+
+Each feature in `lib/src/feature/` follows this structure:
+
+```
+feature_name/
+  ├── data/
+  │   ├── feature_repository.dart        # Repository implementation
+  │   └── feature_repository.g.dart      # Generated Riverpod providers
+  ├── domain/
+  │   └── *.dart                         # Domain models/entities
+  └── presentation/
+      ├── feature_screen.dart            # Main screen widget
+      ├── feature_subscreen.dart         # Sub-screen widgets
+      ├── controller/
+      │   ├── feature_event.dart         # Navigation/action mixins
+      │   └── feature_state.dart         # State management mixins
+      └── widget/                        # Feature-specific widgets
+```
+
+## Entry Points
+
+- **`main_dev.dart`**: Development flavor entry point
+- **`main_stg.dart`**: Staging flavor entry point
+- **`main_prod.dart`**: Production flavor entry point
+- **`initializer.dart`**: App initialization logic
+- **`flavor.dart`**: Flavor configuration
+
+## Flavors
+
+The app supports three flavors:
+- **dev**: Development environment (`id.logique.mm2100.dev`)
+- **stg**: Staging environment (`id.logique.mm2100.stg`)
+- **prod**: Production environment (`id.logique.mm2100`)
+
+Flavor configuration is in [pubspec.yaml](mdc:pubspec.yaml) under `flavorizr`.
+
+## Key Files
+
+- [app.dart](mdc:lib/src/app.dart): Main app widget with router and localization setup
+- [app_router.dart](mdc:lib/src/routing/app_router.dart): GoRouter configuration
+- [app_startup.dart](mdc:lib/src/routing/app_startup.dart): App initialization
+- [pubspec.yaml](mdc:pubspec.yaml): Dependencies and project configuration

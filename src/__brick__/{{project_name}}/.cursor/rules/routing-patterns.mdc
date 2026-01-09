@@ -1,0 +1,160 @@
+---
+globs: **/routing/**/*.dart
+description: Routing and navigation patterns using GoRouter
+---
+# Routing Patterns
+
+## GoRouter Configuration
+
+Routing is configured in [app_router.dart](mdc:lib/src/routing/app_router.dart) using GoRouter.
+
+## Route Definitions
+
+Routes are defined in the `AppRoute` enum:
+
+```dart
+enum AppRoute {
+  mainNav,
+  login,
+  register,
+  // ...
+}
+```
+
+## Route Provider
+
+The router is provided via Riverpod:
+
+```dart
+@riverpod
+GoRouter goRouter(Ref ref) {
+  // Router configuration
+}
+```
+
+Access the router:
+```dart
+ref.read(goRouterProvider).goNamed(/* ... */);
+```
+
+## Navigation Patterns
+
+### Named Navigation
+
+Use `goNamed` with route enum names:
+
+```dart
+ref.read(goRouterProvider).goNamed(
+  AppRoute.newsDetail.name,
+  pathParameters: {'currentIndex': '0'},
+  queryParameters: {'newsId': newsId},
+);
+```
+
+### Path Parameters
+
+Path parameters are defined in route configuration and accessed via:
+- `pathParameters` map in `goNamed`
+- Route parameters in screen widgets
+
+### Query Parameters
+
+Query parameters are passed via `queryParameters`:
+```dart
+queryParameters: {'newsId': newsId, 'category': category}
+```
+
+## Route Guards
+
+Authentication and route guards are handled in the router configuration. Check [app_router.dart](mdc:lib/src/routing/app_router.dart) for current implementation.
+
+## Navigation from Mixins
+
+Navigation logic is typically placed in event mixins (e.g., `HomeEvent`, `LoginEvent`) to keep screens clean:
+
+```dart
+mixin class HomeEvent {
+  void goToNewsDetail(WidgetRef ref, String newsId) {
+    ref.read(goRouterProvider).goNamed(/* ... */);
+  }
+}
+```
+
+## Passing Complex Objects via Navigation
+
+**Use GoRouter's `extra` parameter** to pass complex objects (models, data classes) during navigation instead of using StateProvider.
+
+### Pattern
+
+**In Event Mixin** (`my_report_event.dart`):
+```dart
+mixin class MyReportEvent {
+  void goToReportDetail(WidgetRef ref, ReportItem reportItem) {
+    ref.read(goRouterProvider).goNamed(
+      AppRoute.myReportDetail.name,
+      pathParameters: {'currentIndex': '0'},
+      extra: reportItem, // Pass complex object here
+    );
+  }
+}
+```
+
+**In Router** (`app_router.dart`):
+```dart
+GoRoute(
+  path: MyReportDetailScreen.path,
+  name: AppRoute.myReportDetail.name,
+  pageBuilder: (context, state) {
+    final reportItem = state.extra as ReportItem?; // Extract from state.extra
+    return _transitionPage(
+      state: state,
+      child: MyReportDetailScreen(reportItem: reportItem),
+    );
+  },
+)
+```
+
+**In Detail Screen**:
+```dart
+class MyReportDetailScreen extends ConsumerWidget {
+  const MyReportDetailScreen({super.key, required this.reportItem});
+  
+  final ReportItem? reportItem;
+  
+  // Use reportItem directly
+}
+```
+
+**Key Points:**
+- ✅ **Preferred over StateProvider**: `extra` parameter is the recommended way to pass complex objects in GoRouter
+- ✅ **Type-safe**: Use `as` casting with nullable types (`as ReportItem?`)
+- ✅ **No cleanup needed**: Unlike StateProvider, no need to manage state lifecycle
+- ✅ **Works with both `goNamed` and `pushNamed`**: Both methods support `extra` parameter
+
+## pushNamed vs goNamed
+
+**Use `pushNamed`** when you want to maintain the navigation stack (e.g., navigating from list to detail screen):
+```dart
+ref.read(goRouterProvider).pushNamed(
+  AppRoute.myReportDetail.name,
+  pathParameters: {'currentIndex': '0'},
+  extra: reportItem,
+);
+```
+
+**Use `goNamed`** when you want to replace the current route (e.g., navigating to a main screen):
+```dart
+ref.read(goRouterProvider).goNamed(
+  AppRoute.myReport.name,
+  pathParameters: {'currentIndex': '0'},
+);
+```
+
+**Guidelines:**
+- ✅ **`pushNamed`**: For detail screens, forms, or any screen that should be in the navigation stack
+- ✅ **`goNamed`**: For main screens, tabs, or when replacing the entire navigation stack
+- Both methods support `extra`, `pathParameters`, and `queryParameters`
+
+## Route Refresh
+
+Route refresh on auth state changes is handled via [go_router_refresh_stream.dart](mdc:lib/src/routing/go_router_refresh_stream.dart).

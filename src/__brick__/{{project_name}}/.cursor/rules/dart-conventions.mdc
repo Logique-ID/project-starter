@@ -1,0 +1,148 @@
+---
+globs: *.dart
+---
+# Dart Code Conventions
+
+## Code Style
+
+- Follow Dart style guide and Flutter conventions
+- Use `prefer_const_constructors` and `prefer_const_literals_to_create_immutables` (configured in [analysis_options.yaml](mdc:analysis_options.yaml))
+- Prefer single quotes for strings (when consistent with existing code)
+- Always use semicolons
+
+## Variable Declarations
+
+**Avoid `var` and `dynamic`** - Always use explicit types or `final`:
+
+- ✅ **Use `final`** for variables that won't be reassigned (preferred)
+- ✅ **Use explicit type** when the type is important or when reassignment is needed
+- ❌ **Avoid `var`** - Use `final` or explicit type instead
+- ❌ **Avoid `dynamic`** - Use explicit type or `Object?` if type is unknown
+
+**Examples:**
+
+```dart
+// ✅ Correct: Use final with explicit type
+final String name = 'John';
+final int count = 42;
+final List<String> items = ['a', 'b'];
+
+// ✅ Correct: Use final with type inference (when type is obvious)
+final name = 'John'; // String is inferred
+final count = 42; // int is inferred
+
+// ✅ Correct: Use explicit type when reassignment is needed
+String message = 'Hello';
+message = 'World';
+
+// ❌ Wrong: Avoid var
+var name = 'John'; // Use final instead
+var count = 42; // Use final instead
+
+// ❌ Wrong: Avoid dynamic
+dynamic data = fetchData(); // Use explicit type or Object? instead
+Object? data = fetchData(); // Better alternative
+```
+
+**When to use explicit type vs final:**
+- Use `final` when the variable won't be reassigned (most cases)
+- Use explicit type when:
+  - The variable will be reassigned
+  - The type is not obvious from the initializer
+  - You want to make the type explicit for clarity
+
+## Imports
+
+Organize imports in this order:
+1. Dart SDK imports
+2. Flutter imports
+3. Package imports (third-party)
+4. Project imports (relative imports with `package:`)
+
+Example:
+```dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import 'package:mm2100_mobile/src/theme/app_color_theme.dart';
+```
+
+## File Naming
+
+- Use `snake_case` for file names
+- Screen files: `*_screen.dart`
+- Sub-screen files: `*_subscreen.dart`
+- Widget files: `*_widget.dart`
+- Repository files: `*_repository.dart`
+- Controller files: `*_controller.dart`, `*_event.dart`, `*_state.dart`
+- Model files: `*_response.dart`, `*_model.dart`, etc.
+
+## Model Classes and JSON Serialization
+
+**Prefer `num` over `int` or `double`** for numeric fields in model classes that are used for JSON API conversion.
+
+This is especially important because JSON responses may return:
+- `2` (integer) when the decimal is 0
+- `2.0` (double) when the decimal is present
+- `2.5` (double) when there's a fractional part
+
+Using `num` handles all these cases gracefully.
+
+**Examples:**
+
+```dart
+// ✅ Correct: Use num for numeric fields in JSON models
+class ProductResponse {
+  final num price;
+  final num quantity;
+  final num? discount; // nullable if optional
+  
+  ProductResponse({
+    required this.price,
+    required this.quantity,
+    this.discount,
+  });
+  
+  factory ProductResponse.fromJson(Map<String, dynamic> json) {
+    return ProductResponse(
+      price: json['price'] as num, // Handles both 2 and 2.0
+      quantity: json['quantity'] as num,
+      discount: json['discount'] as num?,
+    );
+  }
+}
+
+// ❌ Wrong: Using int or double may cause parsing errors
+class ProductResponse {
+  final int price; // May fail if JSON returns 2.0
+  final double quantity; // May fail if JSON returns 2
+}
+```
+
+**When to use `int` or `double` explicitly:**
+- Use `int` when the value is guaranteed to always be an integer (e.g., IDs, counts)
+- Use `double` when the value is guaranteed to always have decimals (e.g., percentages, coordinates)
+- Use `num` when the value can be either (e.g., prices, measurements, API numeric fields)
+
+## Code Generation
+
+- Files using `@riverpod` or `@Riverpod` annotations must have a corresponding `.g.dart` file
+- Always include `part 'filename.g.dart';` at the top of files that need code generation
+- Run `flutter pub run build_runner build --delete-conflicting-outputs` after adding/modifying providers
+- Never manually edit `.g.dart` files
+
+## Widget Conventions
+
+- Use `const` constructors whenever possible
+- Prefer `ConsumerWidget` or `ConsumerStatefulWidget` for widgets that need Riverpod
+- Use mixins for shared behavior (e.g., `HomeEvent`, `HomeState`)
+- Extract reusable widgets to `common_widget/` or feature-specific `widget/` folders
+
+## Error Handling
+
+- Use `AsyncValue` from Riverpod for async state management
+- Handle errors gracefully with proper error widgets
+- Use [AsyncValueWidget](mdc:lib/src/common_widget/async_value_widget.dart) for displaying async data

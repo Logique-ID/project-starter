@@ -1,0 +1,8 @@
+name: hello_world_hooks
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  mason: ^0.1.2
+  path: ^1.9.0

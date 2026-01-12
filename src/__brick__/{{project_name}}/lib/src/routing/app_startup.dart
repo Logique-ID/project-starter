@@ -10,7 +10,9 @@ import '../app.dart';
 import '../constant/error_message.dart';
 import '../core/mixins/startup_mixin.dart';
 import '../localization/app_localization_repository.dart';
+{{#use_firebase}}
 import '../service/firebase/firebase_service.dart';
+{{/use_firebase}}
 import '../utils/common_utils.dart';
 import '../utils/data_source_config/sembast/sembast_config.dart';
 
@@ -24,7 +26,9 @@ Future<void> appStartup(Ref ref) async {
 
   await ref.watch(sembastDatabaseProvider.future);
   await ref.watch(appLocalizationRepositoryProvider).readLocalization(ref);
+  {{#use_firebase}}
   await ref.read(firebaseServiceProvider).init();
+  {{/use_firebase}}
   {{#use_splash}}
 
   FlutterNativeSplash.remove();

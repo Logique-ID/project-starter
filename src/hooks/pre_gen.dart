@@ -3,12 +3,15 @@ import 'package:mason/mason.dart';
 Future<void> run(HookContext context) async {
   final progress = context.logger.progress('Prepare project');
 
-  // Prompt for Firebase project ID
-  final firebaseProjectId = context.logger.prompt(
-    'Enter your Firebase project ID:',
-    defaultValue: '',
-  );
-  context.vars['firebase_project_id'] = firebaseProjectId;
+  final useFirebase = context.vars['use_firebase'] as bool? ?? false;
+  if (useFirebase) {
+    // Prompt for Firebase project ID
+    final firebaseProjectId = context.logger.prompt(
+      'Enter your Firebase project ID:',
+      defaultValue: '',
+    );
+    context.vars['firebase_project_id'] = firebaseProjectId;
+  }
 
   // Check if custom_icon is true
   final customIcon = context.vars['custom_icon'] as bool? ?? false;

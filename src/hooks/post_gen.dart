@@ -13,24 +13,28 @@ Future<void> run(HookContext context) async {
       baseDir: 'android/app/src/main/kotlin',
     );
 
-    /// Run flutterfire config
-    await Future.wait([
-      HookHelper.runCommand(
-        context,
-        command: 'sh',
-        arguments: ['flutterfire-config.sh', 'dev'],
-      ),
-      HookHelper.runCommand(
-        context,
-        command: 'sh',
-        arguments: ['flutterfire-config.sh', 'stg'],
-      ),
-      HookHelper.runCommand(
-        context,
-        command: 'sh',
-        arguments: ['flutterfire-config.sh', 'prod'],
-      ),
-    ]);
+    // Run flutterfire config if use_firebase is true
+    final useFirebase = context.vars['use_firebase'] as bool? ?? false;
+    if (useFirebase) {
+      /// Run flutterfire config
+      await Future.wait([
+        HookHelper.runCommand(
+          context,
+          command: 'sh',
+          arguments: ['flutterfire-config.sh', 'dev'],
+        ),
+        HookHelper.runCommand(
+          context,
+          command: 'sh',
+          arguments: ['flutterfire-config.sh', 'stg'],
+        ),
+        HookHelper.runCommand(
+          context,
+          command: 'sh',
+          arguments: ['flutterfire-config.sh', 'prod'],
+        ),
+      ]);
+    }
   }
 
   // Apply custom app icon if provided

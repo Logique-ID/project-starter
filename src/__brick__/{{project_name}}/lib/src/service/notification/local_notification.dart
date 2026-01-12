@@ -1,10 +1,14 @@
 import 'dart:convert';
 
+{{#use_firebase}}
 import 'package:firebase_messaging/firebase_messaging.dart';
+{{/use_firebase}}
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+{{#use_firebase}}
 import '../firebase/firebase_service.dart';
+{{/use_firebase}}
 
 part 'local_notification.g.dart';
 
@@ -90,10 +94,13 @@ class LocalNotification {
     if (notifPayload != null) {
       final Map<String, dynamic> payloadJson = json.decode(notifPayload);
 
+      {{#use_firebase}}
       onMsgClicked(payloadJson, '_onDidReceiveNotificationResponse');
+      {{/use_firebase}}
     }
   }
 
+  {{#use_firebase}}
   Future<void> showLocalNotification(RemoteMessage message) async {
     final notificationDetails = NotificationDetails(
       android: _androidNotificationDetails,
@@ -108,6 +115,7 @@ class LocalNotification {
       payload: json.encode(message.data),
     );
   }
+  {{/use_firebase}}
 }
 
 Future<void> _onDidReceiveBackgroundNotificationResponse(
@@ -117,7 +125,9 @@ Future<void> _onDidReceiveBackgroundNotificationResponse(
   if (notifPayload != null) {
     final Map<String, dynamic> payloadJson = json.decode(notifPayload);
 
+    {{#use_firebase}}
     onMsgClicked(payloadJson, '_onDidReceiveBackgroundNotificationResponse');
+    {{/use_firebase}}
   }
 }
 

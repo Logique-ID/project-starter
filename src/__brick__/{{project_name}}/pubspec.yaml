@@ -32,8 +32,11 @@ dependencies:
   flutter_native_splash: 2.4.7
   {{/use_splash}}
 
+  {{#use_firebase}}
   # firebase
   firebase_core: 4.2.1
+  firebase_messaging: ^16.0.4
+  {{/use_firebase}}
 
   # screenutil & internet connection checker
   flutter_screenutil: 5.9.3
@@ -45,7 +48,6 @@ dependencies:
   dio: 5.9.0
   alice_dio: ^1.0.7
   alice: ^1.0.0
-  firebase_messaging: ^16.0.4
   flutter_local_notifications: ^19.5.0
   flutter_svg: ^2.2.2
   flutter_form_builder: ^10.2.0

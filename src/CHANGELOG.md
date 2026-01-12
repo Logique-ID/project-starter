@@ -1,3 +1,13 @@
+# 0.1.1
+
+## Changes
+
+### Improvements
+- **Conditional Splash Screen**: Made splash screen implementation optional based on `use_splash` template variable
+  - `flutter_native_splash` dependency and configuration are now conditionally included in `pubspec.yaml`
+  - Splash screen initialization and removal code are conditionally generated in `initializer.dart` and `app_startup.dart`
+  - Updated `use_splash` variable description and prompt in `brick.yaml` for clarity
+
 # 0.1.0+1
 
 Initial release of the Flutter Starter Brick.
@@ -20,7 +30,7 @@ Initial release of the Flutter Starter Brick.
 ### UI & Design
 - Responsive design with Flutter ScreenUtil 5.9.3
 - Custom launcher icons via flutter_launcher_icons 0.14.4 (iOS light/dark support)
-- Native splash screen via flutter_native_splash 2.4.7 (Android 12+ support)
+- Optional native splash screen via flutter_native_splash 2.4.7 (Android 12+ support, conditionally included)
 - Google Fonts 6.3.2
 - SVG support via flutter_svg 2.2.2
 - Material Design theming with custom color and text themes
@@ -48,12 +58,12 @@ Initial release of the Flutter Starter Brick.
 - Build runner 2.10.2 for code generation
 
 ### Mason Hooks
-- **Pre-generation**: Prompts for Firebase project ID, custom app icon path, and splash image path
+- **Pre-generation**: Prompts for Firebase project ID, custom app icon path, and splash image path (if `use_splash` is enabled)
 - **Post-generation**: 
   - Auto-creates Kotlin package directory structure from app_id
   - Runs FlutterFire CLI configuration for all flavors
   - Generates launcher icons from custom image
-  - Creates native splash screen from custom image
+  - Creates native splash screen from custom image (if `use_splash` is enabled)
 
 ### Template Variables
 | Variable | Description | Default |

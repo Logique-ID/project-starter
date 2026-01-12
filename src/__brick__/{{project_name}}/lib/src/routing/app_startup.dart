@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+{{#use_splash}}
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+{{/use_splash}}
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -23,8 +25,10 @@ Future<void> appStartup(Ref ref) async {
   await ref.watch(sembastDatabaseProvider.future);
   await ref.watch(appLocalizationRepositoryProvider).readLocalization(ref);
   await ref.read(firebaseServiceProvider).init();
+  {{#use_splash}}
 
   FlutterNativeSplash.remove();
+  {{/use_splash}}
 }
 
 /// Widget class to manage asynchronous app initialization

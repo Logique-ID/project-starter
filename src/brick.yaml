@@ -30,6 +30,6 @@ vars:
     prompt: Do you want to use a custom app icon?
   use_splash:
     type: boolean
-    description: Use custom app splash
+    description: Implement splash screen
     default: true
-    prompt: Use custom app splash
+    prompt: Implement splash screen?

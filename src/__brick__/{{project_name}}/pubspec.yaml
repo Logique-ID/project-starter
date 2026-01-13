@@ -10,8 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  {{#use_localization}}
   flutter_localizations:
     sdk: flutter
+  {{/use_localization}}
 
   # sembast database & encryption
   sembast: 3.8.5+2
@@ -66,8 +68,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  {{#use_localization}}
   # Enable generation of localized Strings from arb files.
   generate: true
+  {{/use_localization}}
 
   assets:
     - assets/

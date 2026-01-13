@@ -8,7 +8,9 @@ import '../../../common_widget/custom_snackbar.dart';
 import '../../../common_widget/form/custom_text_form_field.dart';
 import '../../../common_widget/primary_button.dart';
 import '../../../common_widget/primary_outline_button.dart';
+{{#use_localization}}
 import '../../../core/mixins/localization_mixin.dart';
+{{/use_localization}}
 import '../../../localization/string_hardcoded.dart';
 import '../../../theme/app_color_theme.dart';
 import '../../../theme/app_sizes.dart';
@@ -18,7 +20,7 @@ import 'controller/login_event.dart';
 import 'controller/login_state.dart';
 
 class LoginScreen extends ConsumerWidget
-    with LoginState, LoginEvent, LocalizationMixin {
+    with LoginState, LoginEvent{{#use_localization}}, LocalizationMixin{{/use_localization}} {
   const LoginScreen({super.key});
 
   static const String path = 'login';
@@ -41,10 +43,12 @@ class LoginScreen extends ConsumerWidget
         }
       }
     });
+    {{#use_localization}}
     final loc = getLocalizations(ref);
+    {{/use_localization}}
 
     return Scaffold(
-      appBar: AppBar(title: Text(loc.login), centerTitle: true),
+      appBar: AppBar(title: Text({{#use_localization}}loc.login{{/use_localization}}{{^use_localization}}'Login'.hardcoded{{/use_localization}}), centerTitle: true),
       body: FormBuilder(
         key: _formKey,
         child: Padding(
@@ -84,7 +88,7 @@ class LoginScreen extends ConsumerWidget
                   builder: (context, consRef, child) {
                     final isLoading = isStateLoginLoading(consRef);
                     return PrimaryButton(
-                      text: loc.login,
+                      text: {{#use_localization}}loc.login{{/use_localization}}{{^use_localization}}'Login'.hardcoded{{/use_localization}},
                       isLoading: isLoading,
                       onPressed: isLoading
                           ? null

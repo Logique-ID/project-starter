@@ -5,8 +5,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'common_widget/connection_listener_widget.dart';
 import 'core/mixins/router_mixin.dart';
+{{#use_localization}}
 import 'localization/app_localization_repository.dart';
 import 'localization/app_localizations.dart';
+{{/use_localization}}
 import 'theme/app_theme.dart';
 
 class App extends ConsumerWidget with RouterMixin {
@@ -23,11 +25,13 @@ class App extends ConsumerWidget with RouterMixin {
           debugShowCheckedModeBanner: false,
           routerConfig: goRouter(ref),
           restorationScopeId: 'app',
+          {{#use_localization}}
           localizationsDelegates: const [
             ...AppLocalizations.localizationsDelegates,
           ],
           locale: Locale(ref.watch(localeProvider)),
           supportedLocales: AppLocalizations.supportedLocales,
+          {{/use_localization}}
           builder: (context, widget) => _OrientationLocker(
             child: ConnectionListenerWidget(child: widget!),
           ),

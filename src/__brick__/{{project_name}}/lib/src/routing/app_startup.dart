@@ -9,7 +9,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../app.dart';
 import '../constant/error_message.dart';
 import '../core/mixins/startup_mixin.dart';
+{{#use_localization}}
 import '../localization/app_localization_repository.dart';
+{{/use_localization}}
 {{#use_firebase}}
 import '../service/firebase/firebase_service.dart';
 {{/use_firebase}}
@@ -25,7 +27,9 @@ Future<void> appStartup(Ref ref) async {
   });
 
   await ref.watch(sembastDatabaseProvider.future);
+  {{#use_localization}}
   await ref.watch(appLocalizationRepositoryProvider).readLocalization(ref);
+  {{/use_localization}}
   {{#use_firebase}}
   await ref.read(firebaseServiceProvider).init();
   {{/use_firebase}}

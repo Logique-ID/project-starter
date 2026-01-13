@@ -1,3 +1,19 @@
+# 0.1.4
+
+## Changes
+
+### Improvements
+- **Conditional Dio Implementation**: Made Dio HTTP client optional based on `use_dio` template variable
+  - Added `use_dio` template variable (default: `true`) to `brick.yaml`
+  - Dio dependencies (`dio`, `alice_dio`, `alice`) are now conditionally included in `pubspec.yaml`
+  - Dio configuration files moved to conditional directory structure using `{{#use_dio}}` template syntax
+  - `dio_config.dart` - Dio instance configuration with interceptors, authentication, error handling
+  - `dio_config.g.dart` - Generated Riverpod provider
+  - `cancel_token_ref.dart` - Cancel token reference utility
+  - `login_repository.dart` conditionally uses Dio for HTTP requests or throws `UnimplementedError` when disabled
+  - `app_router.dart` conditionally uses Alice navigator key (for debugging inspector) or creates standard `GlobalKey<NavigatorState>` when disabled
+  - When disabled, provides TODO comment suggesting alternative HTTP client implementations (e.g., http package, chopper)
+
 # 0.1.3
 
 ## Changes
@@ -113,6 +129,7 @@ Initial release of the Flutter Starter Brick.
 | `use_splash` | Use custom splash screen | `true` |
 | `use_firebase` | Implement Firebase | `true` |
 | `use_localization` | Implement localization | `true` |
+| `use_dio` | Implement Dio with Alice debugging inspector | `true` |
 
 ### Included Feature Modules
 - Authentication (auth repository with app user model)

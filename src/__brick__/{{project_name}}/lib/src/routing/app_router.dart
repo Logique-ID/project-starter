@@ -9,7 +9,9 @@ import '../../flavor.dart';
 import '../feature/authentication/data/auth_repository.dart';
 import '../feature/login/presentation/login_screen.dart';
 import '../feature/main_nav/presentation/main_nav_screen.dart';
+{{#use_dio}}
 import '../utils/data_source_config/dio/dio_config.dart';
+{{/use_dio}}
 import 'go_router_refresh_stream.dart';
 
 part 'app_router.g.dart';
@@ -19,10 +21,16 @@ enum AppRoute { mainNav, login }
 @riverpod
 GoRouter goRouter(Ref ref) {
   final authRepository = ref.watch(authRepositoryProvider);
+  {{#use_dio}}
+  final navigatorKey = ref.watch(aliceProvider).getNavigatorKey();
+  {{/use_dio}}
+  {{^use_dio}}
+  final navigatorKey = GlobalKey<NavigatorState>();
+  {{/use_dio}}
   return GoRouter(
     initialLocation: '${MainNavScreen.path}/0',
     debugLogDiagnostics: !kReleaseMode && F.appFlavor != Flavor.prod,
-    navigatorKey: ref.watch(aliceProvider).getNavigatorKey(),
+    navigatorKey: navigatorKey,
     refreshListenable: GoRouterRefreshStream(
       authRepository.authStateChangesStream(),
     ),

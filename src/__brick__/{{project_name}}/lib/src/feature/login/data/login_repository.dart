@@ -1,9 +1,13 @@
+{{#use_dio}}
 import 'package:dio/dio.dart';
+{{/use_dio}}
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+{{#use_dio}}
 import '../../../../flavor.dart';
 import '../../../utils/data_source_config/dio/dio_config.dart';
 import '../../authentication/data/auth_repository.dart';
+{{/use_dio}}
 import '../domain/login_response.dart';
 
 part 'login_repository.g.dart';
@@ -15,6 +19,7 @@ Future<LoginResponse> login(
   required String password,
   required String recaptchaToken,
 }) async {
+  {{#use_dio}}
   try {
     final dio = ref.watch(dioConfigProvider);
     final response = await dio.post(
@@ -50,4 +55,9 @@ Future<LoginResponse> login(
   } catch (e) {
     rethrow;
   }
+  {{/use_dio}}
+  {{^use_dio}}
+  // TODO: Implement HTTP client of your choice (e.g., http package, chopper, etc.)
+  throw UnimplementedError('Login not implemented. Please implement your HTTP client.');
+  {{/use_dio}}
 }

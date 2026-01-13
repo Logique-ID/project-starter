@@ -1,6 +1,6 @@
 name: starter
 description: A starter brick for a new Flutter project with flavors (dev, stg, prod), Firebase, Riverpod, and more.
-version: 0.1.3
+version: 0.1.4
 
 environment:
   mason: ^0.1.2
@@ -43,3 +43,8 @@ vars:
     description: Implement localization
     default: true
     prompt: Implement localization?
+  use_dio:
+    type: boolean
+    description: Implement Dio with Alice debugging inspector
+    default: true
+    prompt: Implement Dio?

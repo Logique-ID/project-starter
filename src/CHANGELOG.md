@@ -1,3 +1,23 @@
+# 0.1.2
+
+## Changes
+
+### Improvements
+- **Conditional Firebase Implementation**: Made Firebase integration optional based on `use_firebase` template variable
+  - Added `use_firebase` template variable (default: `true`) to `brick.yaml`
+  - Firebase dependencies (`firebase_core`, `firebase_messaging`) are now conditionally included in `pubspec.yaml`
+  - Firebase initialization code is conditionally generated in `initializer.dart` and main entry files (`main_dev.dart`, `main_stg.dart`, `main_prod.dart`)
+  - Firebase service files moved to conditional directory structure using `{{#use_firebase}}` template syntax
+  - `flutterfire-config.sh` script is now conditionally generated
+  - Pre-generation hook conditionally prompts for Firebase project ID only when `use_firebase` is enabled
+  - Post-generation hook conditionally runs FlutterFire CLI configuration for all flavors
+  - Removed hardcoded `firebase_options` files (now generated dynamically by FlutterFire CLI)
+  - Android build configuration (`build.gradle.kts`, `settings.gradle.kts`) conditionally includes Firebase plugins
+  - iOS Xcode project file (`project.pbxproj`) conditionally includes Firebase configuration
+  - Notification service conditionally uses Firebase messaging
+
+- **Android Studio Compatibility**: Added IDE configuration support for Android Studio
+
 # 0.1.1
 
 ## Changes
@@ -58,10 +78,10 @@ Initial release of the Flutter Starter Brick.
 - Build runner 2.10.2 for code generation
 
 ### Mason Hooks
-- **Pre-generation**: Prompts for Firebase project ID, custom app icon path, and splash image path (if `use_splash` is enabled)
+- **Pre-generation**: Prompts for Firebase project ID (if `use_firebase` is enabled), custom app icon path, and splash image path (if `use_splash` is enabled)
 - **Post-generation**: 
   - Auto-creates Kotlin package directory structure from app_id
-  - Runs FlutterFire CLI configuration for all flavors
+  - Runs FlutterFire CLI configuration for all flavors (if `use_firebase` is enabled)
   - Generates launcher icons from custom image
   - Creates native splash screen from custom image (if `use_splash` is enabled)
 
@@ -73,6 +93,7 @@ Initial release of the Flutter Starter Brick.
 | `app_id` | Bundle/application ID | `com.example.myapp` |
 | `custom_icon` | Use custom app icon | `false` |
 | `use_splash` | Use custom splash screen | `true` |
+| `use_firebase` | Implement Firebase | `true` |
 
 ### Included Feature Modules
 - Authentication (auth repository with app user model)

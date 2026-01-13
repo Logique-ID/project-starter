@@ -1,3 +1,21 @@
+# 0.1.3
+
+## Changes
+
+### Improvements
+- **Conditional Localization Implementation**: Made localization optional based on `use_localization` template variable
+  - Added `use_localization` template variable (default: `true`) to `brick.yaml`
+  - Localization files moved to conditional directory structure using `{{#use_localization}}` template syntax
+  - All localization files (ARB files, repository, providers, mixins) are conditionally generated
+  - When disabled, provides `string_hardcoded.dart` extension as fallback for hardcoded strings
+  - `flutter_localizations` dependency is conditionally included in `pubspec.yaml`
+  - `l10n.yaml` configuration file is conditionally generated
+  - `untranslated_msg_list.txt` is conditionally generated
+  - Localization mixin (`localization_mixin.dart`) is conditionally included
+  - `app.dart` conditionally includes localization delegates, locale configuration, and supported locales
+  - Feature screens (login, home) conditionally use `LocalizationMixin` when enabled or `StringHardcoded` extension when disabled
+  - `app_startup.dart` conditionally initializes localization repository
+
 # 0.1.2
 
 ## Changes
@@ -94,6 +112,7 @@ Initial release of the Flutter Starter Brick.
 | `custom_icon` | Use custom app icon | `false` |
 | `use_splash` | Use custom splash screen | `true` |
 | `use_firebase` | Implement Firebase | `true` |
+| `use_localization` | Implement localization | `true` |
 
 ### Included Feature Modules
 - Authentication (auth repository with app user model)

@@ -44,10 +44,13 @@ class SyncConfig {
     /// general flutter
     'pubspec.yaml',
     '.git',
+    '.specstory/',
+    '.cursorindexingignore',
 
     /// android
     'android/app/src/main/kotlin/',
     'android/gradle/wrapper/gradle-wrapper.jar',
+    'android/local.properties',
 
     /// ios
     'ios/Flutter/',
@@ -63,6 +66,7 @@ class SyncConfig {
     'ios/Runner.xcworkspace/xcuserdata/',
     'ios/Runner.xcodeproj/project.pbxproj',
     'ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/',
+    'ios/Podfile.lock',
 
     /// assets
     'app-icon.png',

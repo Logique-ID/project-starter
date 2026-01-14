@@ -12,7 +12,8 @@ final _random = Random.secure();
 /// Random bytes generator
 Uint8List _randBytes(int length) {
   return Uint8List.fromList(
-      List<int>.generate(length, (i) => _random.nextInt(256)));
+    List<int>.generate(length, (i) => _random.nextInt(256)),
+  );
 }
 
 /// Generate an encryption password based on a user input password
@@ -38,8 +39,9 @@ class _EncryptEncoder extends Converter<Object?, String> {
     assert(ivEncoded.length == 12);
 
     // Encode the input value
-    final encoded =
-        Encrypter(salsa20).encrypt(json.encode(input), iv: IV(iv)).base64;
+    final encoded = Encrypter(
+      salsa20,
+    ).encrypt(json.encode(input), iv: IV(iv)).base64;
 
     // Prepend the initial value
     return '$ivEncoded$encoded';
@@ -62,8 +64,9 @@ class _EncryptDecoder extends Converter<String, Object?> {
     input = input.substring(12);
 
     // Decode the input
-    final decoded =
-        json.decode(Encrypter(salsa20).decrypt64(input, iv: IV(iv)));
+    final decoded = json.decode(
+      Encrypter(salsa20).decrypt64(input, iv: IV(iv)),
+    );
     if (decoded is Map) {
       return decoded.cast<String, Object?>();
     }
@@ -114,16 +117,19 @@ const _encryptCodecSignature = 'encrypt';
 /// // ...your database is ready to use
 /// ```
 SembastCodec getEncryptSembastCodec({required String password}) => SembastCodec(
-    signature: _encryptCodecSignature,
-    codec: _EncryptCodec(_generateEncryptPassword(password)));
+  signature: _encryptCodecSignature,
+  codec: _EncryptCodec(_generateEncryptPassword(password)),
+);
 
 /// Wrap a factory to always use the codec
 class EncryptedDatabaseFactory implements DatabaseFactory {
   final DatabaseFactory databaseFactory;
   late final SembastCodec codec;
 
-  EncryptedDatabaseFactory(
-      {required this.databaseFactory, required String password}) {
+  EncryptedDatabaseFactory({
+    required this.databaseFactory,
+    required String password,
+  }) {
     codec = getEncryptSembastCodec(password: password);
   }
 
@@ -136,17 +142,21 @@ class EncryptedDatabaseFactory implements DatabaseFactory {
 
   /// To use with codec, null
   @override
-  Future<Database> openDatabase(String path,
-      {int? version,
-      OnVersionChangedFunction? onVersionChanged,
-      DatabaseMode? mode,
-      SembastCodec? codec}) {
+  Future<Database> openDatabase(
+    String path, {
+    int? version,
+    OnVersionChangedFunction? onVersionChanged,
+    DatabaseMode? mode,
+    SembastCodec? codec,
+  }) {
     assert(codec == null);
-    return databaseFactory.openDatabase(path,
-        version: version,
-        onVersionChanged: onVersionChanged,
-        mode: mode,
-        codec: this.codec);
+    return databaseFactory.openDatabase(
+      path,
+      version: version,
+      onVersionChanged: onVersionChanged,
+      mode: mode,
+      codec: this.codec,
+    );
   }
 
   @override

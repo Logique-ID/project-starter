@@ -47,7 +47,7 @@ Before using this brick, ensure you have:
 Add directly from Git in your global mason configuration:
 
 ```bash
-mason add starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref main
+mason add starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
 ```
 
 ## Usage
@@ -198,44 +198,6 @@ This brick uses [Mustache](https://mustache.github.io/) templating:
 - `{{#condition}}...{{/condition}}` - Conditional block (true)
 - `{{^condition}}...{{/condition}}` - Inverted block (false)
 - `{{#list}}...{{/list}}` - Iteration
-
-## Troubleshooting
-
-### Firebase Configuration Fails
-
-If you enabled Firebase (`use_firebase: true`), ensure you're logged into Firebase CLI and the project ID is correct:
-
-```bash
-firebase projects:list
-```
-
-**Note**: If you don't need Firebase, set `use_firebase: false` to skip Firebase setup entirely.
-
-### Android Build Fails with Package Not Found
-
-The Kotlin directory structure should match your `app_id`. The brick creates this automatically, but verify:
-
-```bash
-ls android/app/src/main/kotlin/
-# Should show: com/yourcompany/yourapp/MainActivity.kt
-```
-
-### iOS Build Fails
-
-Ensure CocoaPods is up to date:
-
-```bash
-cd ios && pod install --repo-update
-```
-
-### Code Generation Issues
-
-Clear build cache and regenerate:
-
-```bash
-dart run build_runner clean
-dart run build_runner build --delete-conflicting-outputs
-```
 
 ## Resources
 

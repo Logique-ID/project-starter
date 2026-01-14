@@ -85,7 +85,7 @@ Examining example files to understand the template structure and variable usage:
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/pubspec.yaml</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/pubspec.yaml</summary>
 
 </details>
 </tool-use>
@@ -161,7 +161,7 @@ Directory: **/Users/cirimin/Logique/Project Starter/project-starter** (2 files)
 
 | File |
 |------|
-| `ref/project-starter-ref/lib/src/common_widget/async_value_widget.dart` |
+| `ref/ref_app/lib/src/common_widget/async_value_widget.dart` |
 | `src/__brick__/{{project_name}}/lib/src/common_widget/async_value_widget.dart` |
 
 </details>
@@ -200,7 +200,7 @@ Directory: **/Users/cirimin/Logique/Project Starter/project-starter** (0 file)
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/lib/flavor.dart</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/lib/flavor.dart</summary>
 
 </details>
 </tool-use>
@@ -399,11 +399,11 @@ Drafting the plan:
 | `README.md` | L170-227 |
 | `README.md` | L69-122 |
 | `README.md` | L71 |
-| `ref/project-starter-ref/README.md` | L67 |
-| `ref/project-starter-ref/.cursor/rules/project-structure.mdc` | L56 |
+| `ref/ref_app/README.md` | L67 |
+| `ref/ref_app/.cursor/rules/project-structure.mdc` | L56 |
 | `src/__brick__/{{project_name}}/.cursor/rules/project-structure.mdc` | L52-75 |
 | `src/__brick__/{{project_name}}/.cursor/rules/flutter-ui-patterns.mdc` | L839-912 |
-| `ref/project-starter-ref/.cursor/commands/generate-cursor-rules.md` | L42 |
+| `ref/ref_app/.cursor/commands/generate-cursor-rules.md` | L42 |
 
 </details>
 </tool-use>
@@ -419,7 +419,7 @@ Drafting the plan:
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/lib/src/routing/app_router.dart</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/lib/src/routing/app_router.dart</summary>
 
 </details>
 </tool-use>
@@ -445,7 +445,7 @@ Parameters:
 
 ```json
 {
-  "plan": "# Mason Template Sync Strategy\n\n## Overview\n\nCreate an automated synchronization system that updates the Mason brick template (&#96;src/__brick__/{{project_name}}/&#96;) from the reference project (&#96;ref/project-starter-ref/&#96;) while preserving all existing Mason/Mustache variable conditions.\n\n## Architecture\n\nThe sync system consists of:\n\n1. **Sync Script** (&#96;scripts/sync-template.dart&#96;) - Main orchestration script\n2. **Smart Merger** (&#96;scripts/sync-template_merger.dart&#96;) - Core logic for preserving Mason variables\n3. **Path Mapper** (&#96;scripts/sync-template_mapper.dart&#96;) - Handles path transformations (project-starter-ref → {{project_name}})\n4. **Variable Parser** (&#96;scripts/sync-template_parser.dart&#96;) - Extracts and preserves Mason variable blocks\n\n## Implementation Details\n\n### 1. Smart Merge Algorithm\n\nThe smart merge preserves Mason variables by:\n\n- **Parsing Mason blocks**: Extract all &#96;{{#var}}...{{/var}}&#96;, &#96;{{^var}}...{{/var}}&#96;, and &#96;{{variable}}&#96; patterns from template\n- **Content mapping**: Map ref content to template structure while preserving variable wrappers\n- **Block preservation**: When ref content changes, maintain the variable conditions that wrap it\n- **Path normalization**: Handle &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96; and &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96; transformations\n\n### 2. File Handling Strategy\n\n- **Existing files**: Smart merge preserving variables\n- **New files**: Copy as-is from ref (no variables added)\n- **Deleted files**: Keep in template (template-specific files)\n- **Binary files**: Direct copy (images, etc.)\n\n### 3. Path Transformations\n\nThe script handles these transformations:\n- Directory: &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96;\n- Package names: &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96;\n- App names: &#96;\"Trial\"&#96; → &#96;\"{{app_name}}\"&#96;\n- Project names: &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96;\n\n### 4. Variable Block Detection\n\nThe parser identifies:\n- Conditional blocks: &#96;{{#use_firebase}}...{{/use_firebase}}&#96;\n- Inverted blocks: &#96;{{^use_dio}}...{{/use_dio}}&#96;\n- Simple variables: &#96;{{project_name}}&#96;, &#96;{{app_id}}&#96;\n- Nested structures within blocks\n\n## File Structure\n\n&#96;&#96;&#96;\nscripts/\n├── sync-template.dart          # Main entry point\n├── sync-template_merger.dart   # Smart merge logic\n├── sync-template_parser.dart   # Mason variable extraction\n├── sync-template_mapper.dart   # Path/content transformations\n└── sync-template_config.dart   # Configuration and patterns\n&#96;&#96;&#96;\n\n## Usage\n\n&#96;&#96;&#96;bash\n# Run sync from project root\ndart run scripts/sync-template.dart\n\n# Dry run (show what would change)\ndart run scripts/sync-template.dart --dry-run\n\n# Sync specific directory\ndart run scripts/sync-template.dart --path lib/src/routing\n&#96;&#96;&#96;\n\n## Key Features\n\n1. **Variable Preservation**: All existing &#96;{{#var}}...{{/var}}&#96; blocks are preserved\n2. **Content Updates**: Ref content changes are synced while maintaining variable structure\n3. **Path Mapping**: Automatic transformation of ref-specific paths to template variables\n4. **Safe Operation**: Dry-run mode to preview changes before applying\n5. **Selective Sync**: Option to sync specific directories or file patterns\n\n## Implementation Steps\n\n1. Create sync script infrastructure with path resolution\n2. Implement Mason variable parser to extract blocks from template files\n3. Build smart merger that maps ref content to template while preserving variables\n4. Add path transformation logic for common patterns\n5. Implement file discovery and comparison logic\n6. Add dry-run and selective sync capabilities\n7. Create documentation and usage examples",
+  "plan": "# Mason Template Sync Strategy\n\n## Overview\n\nCreate an automated synchronization system that updates the Mason brick template (&#96;src/__brick__/{{project_name}}/&#96;) from the reference project (&#96;ref/ref_app/&#96;) while preserving all existing Mason/Mustache variable conditions.\n\n## Architecture\n\nThe sync system consists of:\n\n1. **Sync Script** (&#96;scripts/sync-template.dart&#96;) - Main orchestration script\n2. **Smart Merger** (&#96;scripts/sync-template_merger.dart&#96;) - Core logic for preserving Mason variables\n3. **Path Mapper** (&#96;scripts/sync-template_mapper.dart&#96;) - Handles path transformations (ref_app → {{project_name}})\n4. **Variable Parser** (&#96;scripts/sync-template_parser.dart&#96;) - Extracts and preserves Mason variable blocks\n\n## Implementation Details\n\n### 1. Smart Merge Algorithm\n\nThe smart merge preserves Mason variables by:\n\n- **Parsing Mason blocks**: Extract all &#96;{{#var}}...{{/var}}&#96;, &#96;{{^var}}...{{/var}}&#96;, and &#96;{{variable}}&#96; patterns from template\n- **Content mapping**: Map ref content to template structure while preserving variable wrappers\n- **Block preservation**: When ref content changes, maintain the variable conditions that wrap it\n- **Path normalization**: Handle &#96;ref_app&#96; → &#96;{{project_name}}&#96; and &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96; transformations\n\n### 2. File Handling Strategy\n\n- **Existing files**: Smart merge preserving variables\n- **New files**: Copy as-is from ref (no variables added)\n- **Deleted files**: Keep in template (template-specific files)\n- **Binary files**: Direct copy (images, etc.)\n\n### 3. Path Transformations\n\nThe script handles these transformations:\n- Directory: &#96;ref_app&#96; → &#96;{{project_name}}&#96;\n- Package names: &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96;\n- App names: &#96;\"Trial\"&#96; → &#96;\"{{app_name}}\"&#96;\n- Project names: &#96;ref_app&#96; → &#96;{{project_name}}&#96;\n\n### 4. Variable Block Detection\n\nThe parser identifies:\n- Conditional blocks: &#96;{{#use_firebase}}...{{/use_firebase}}&#96;\n- Inverted blocks: &#96;{{^use_dio}}...{{/use_dio}}&#96;\n- Simple variables: &#96;{{project_name}}&#96;, &#96;{{app_id}}&#96;\n- Nested structures within blocks\n\n## File Structure\n\n&#96;&#96;&#96;\nscripts/\n├── sync-template.dart          # Main entry point\n├── sync-template_merger.dart   # Smart merge logic\n├── sync-template_parser.dart   # Mason variable extraction\n├── sync-template_mapper.dart   # Path/content transformations\n└── sync-template_config.dart   # Configuration and patterns\n&#96;&#96;&#96;\n\n## Usage\n\n&#96;&#96;&#96;bash\n# Run sync from project root\ndart run scripts/sync-template.dart\n\n# Dry run (show what would change)\ndart run scripts/sync-template.dart --dry-run\n\n# Sync specific directory\ndart run scripts/sync-template.dart --path lib/src/routing\n&#96;&#96;&#96;\n\n## Key Features\n\n1. **Variable Preservation**: All existing &#96;{{#var}}...{{/var}}&#96; blocks are preserved\n2. **Content Updates**: Ref content changes are synced while maintaining variable structure\n3. **Path Mapping**: Automatic transformation of ref-specific paths to template variables\n4. **Safe Operation**: Dry-run mode to preview changes before applying\n5. **Selective Sync**: Option to sync specific directories or file patterns\n\n## Implementation Steps\n\n1. Create sync script infrastructure with path resolution\n2. Implement Mason variable parser to extract blocks from template files\n3. Build smart merger that maps ref content to template while preserving variables\n4. Add path transformation logic for common patterns\n5. Implement file discovery and comparison logic\n6. Add dry-run and selective sync capabilities\n7. Create documentation and usage examples",
   "name": "Mason Template Sync Strategy",
   "todos": [
     {
@@ -459,7 +459,7 @@ Parameters:
       "id": "create-parser"
     },
     {
-      "content": "Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)",
+      "content": "Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)",
       "status": "pending",
       "id": "create-mapper"
     },
@@ -531,7 +531,7 @@ Result:
         "id": "create-parser"
       },
       {
-        "content": "Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)",
+        "content": "Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)",
         "status": "pending",
         "id": "create-mapper"
       },
@@ -607,7 +607,7 @@ No results found
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/pubspec.yaml</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/pubspec.yaml</summary>
 
 </details>
 </tool-use>
@@ -629,7 +629,7 @@ Creating the sync system components, starting with the parser, mapper, merger, a
 
 - [-] Create main sync script (scripts/sync-template.dart) with CLI argument parsing, path resolution, and orchestration logic
 - [ ] Implement Mason variable parser (sync-template_parser.dart) to extract {{#var}}...{{/var}}, {{^var}}...{{/var}}, and {{variable}} patterns from template files
-- [ ] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)
+- [ ] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)
 - [ ] Implement smart merger (sync-template_merger.dart) that preserves Mason variable blocks while syncing content from ref to template
 - [ ] Add file discovery, comparison, and sync logic (new files copy as-is, existing files smart merge, deleted files keep, binary files direct copy)
 - [ ] Add dry-run mode, selective sync by path/pattern, and progress reporting
@@ -653,13 +653,13 @@ Lines added: 83, lines removed: 1
 + /// Configuration and patterns for template synchronization
 + class SyncConfig {
 +   /// Path to reference project
-+   static const String refPath = 'ref/project-starter-ref';
++   static const String refPath = 'ref/ref_app';
 + 
 +   /// Path to template directory
 +   static const String templatePath = 'src/__brick__/{{project_name}}';
 + 
 +   /// Reference project name (to be replaced with {{project_name}})
-+   static const String refProjectName = 'project-starter-ref';
++   static const String refProjectName = 'ref_app';
 + 
 +   /// Reference app ID pattern (to be replaced with {{app_id}})
 +   static const String refAppId = 'id.logique.trial';
@@ -708,7 +708,7 @@ Lines added: 83, lines removed: 1
 + 
 +   /// Known Mason variable patterns for path mapping
 +   static const Map&lt;String, String&gt; variableMappings = {
-+     'project-starter-ref': '{{project_name}}',
++     'ref_app': '{{project_name}}',
 +     'id.logique.trial': '{{app_id}}',
 +     'Trial': '{{app_name}}',
 +   };
@@ -936,8 +936,8 @@ Lines added: 111, lines removed: 1
 +   static String mapPath(String refPath) {
 +     String mapped = refPath;
 + 
-+     // Replace project-starter-ref directory name with {{project_name}}
-+     mapped = mapped.replaceAll('project-starter-ref', '{{project_name}}');
++     // Replace ref_app directory name with {{project_name}}
++     mapped = mapped.replaceAll('ref_app', '{{project_name}}');
 + 
 +     // Handle conditional file names (e.g., {{#use_firebase}}file.sh{{/use_firebase}})
 +     // These are already in template, so we need to preserve them
@@ -951,7 +951,7 @@ Lines added: 111, lines removed: 1
 +     String mapped = content;
 + 
 +     // Replace project name references
-+     mapped = mapped.replaceAll('project-starter-ref', '{{project_name}}');
++     mapped = mapped.replaceAll('ref_app', '{{project_name}}');
 + 
 +     // Replace app ID references
 +     mapped = mapped.replaceAll(RegExp(r'\bid\.logique\.trial\b'), '{{app_id}}');
@@ -1016,8 +1016,8 @@ Lines added: 111, lines removed: 1
 + 
 +   /// Get the corresponding template path for a reference path
 +   static String getTemplatePath(String refRelativePath) {
-+     // Replace project-starter-ref with {{project_name}} in path
-+     String templatePath = refRelativePath.replaceAll('project-starter-ref', '{{project_name}}');
++     // Replace ref_app with {{project_name}} in path
++     String templatePath = refRelativePath.replaceAll('ref_app', '{{project_name}}');
 +     
 +     // Handle conditional file names - check if template has conditional version
 +     // This will be handled during file sync
@@ -1591,7 +1591,7 @@ Lint errors for `scripts/sync-template.dart`
 
 - [x] Create main sync script (scripts/sync-template.dart) with CLI argument parsing, path resolution, and orchestration logic
 - [x] Implement Mason variable parser (sync-template_parser.dart) to extract {{#var}}...{{/var}}, {{^var}}...{{/var}}, and {{variable}} patterns from template files
-- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)
+- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)
 - [x] Implement smart merger (sync-template_merger.dart) that preserves Mason variable blocks while syncing content from ref to template
 - [x] Add file discovery, comparison, and sync logic (new files copy as-is, existing files smart merge, deleted files keep, binary files direct copy)
 - [-] Add dry-run mode, selective sync by path/pattern, and progress reporting
@@ -2126,7 +2126,7 @@ Lines added: 177, lines removed: 1
 + 
 + ## Overview
 + 
-+ The sync system updates the Mason brick template (&#96;src/__brick__/{{project_name}}/&#96;) from the reference project (&#96;ref/project-starter-ref/&#96;) while intelligently preserving all existing Mason variable blocks like &#96;{{#use_firebase}}...{{/use_firebase}}&#96;.
++ The sync system updates the Mason brick template (&#96;src/__brick__/{{project_name}}/&#96;) from the reference project (&#96;ref/ref_app/&#96;) while intelligently preserving all existing Mason variable blocks like &#96;{{#use_firebase}}...{{/use_firebase}}&#96;.
 + 
 + ## Usage
 + 
@@ -2187,7 +2187,7 @@ Lines added: 177, lines removed: 1
 + 1. **Parses Mason Blocks**: Extracts all &#96;{{#var}}...{{/var}}&#96;, &#96;{{^var}}...{{/var}}&#96;, and &#96;{{variable}}&#96; patterns from template files
 + 2. **Content Mapping**: Maps reference content to template structure while preserving variable wrappers
 + 3. **Block Preservation**: When reference content changes, maintains the variable conditions that wrap it
-+ 4. **Path Normalization**: Handles transformations like &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96; and &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96;
++ 4. **Path Normalization**: Handles transformations like &#96;ref_app&#96; → &#96;{{project_name}}&#96; and &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96;
 + 
 + ### File Handling Strategy
 + 
@@ -2199,10 +2199,10 @@ Lines added: 177, lines removed: 1
 + ### Path Transformations
 + 
 + The script automatically transforms:
-+ - Directory names: &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96;
++ - Directory names: &#96;ref_app&#96; → &#96;{{project_name}}&#96;
 + - Package names: &#96;id.logique.trial&#96; → &#96;{{app_id}}&#96;
 + - App names: &#96;"Trial"&#96; → &#96;"{{app_name}}"&#96;
-+ - Project names: &#96;project-starter-ref&#96; → &#96;{{project_name}}&#96;
++ - Project names: &#96;ref_app&#96; → &#96;{{project_name}}&#96;
 + 
 + ## Architecture
 + 
@@ -2218,9 +2218,9 @@ Lines added: 177, lines removed: 1
 + 
 + ### Example 1: Syncing pubspec.yaml
 + 
-+ **Reference (ref/project-starter-ref/pubspec.yaml):**
++ **Reference (ref/ref_app/pubspec.yaml):**
 + &#96;&#96;&#96;yaml
-+ name: project-starter-ref
++ name: ref_app
 + dependencies:
 +   firebase_core: 4.2.1
 + &#96;&#96;&#96;
@@ -2249,7 +2249,7 @@ Lines added: 177, lines removed: 1
 + 
 + If a new file &#96;lib/src/new_feature.dart&#96; is added to the reference, it will be:
 + 1. Copied to the template
-+ 2. Path-mapped (&#96;project-starter-ref&#96; → &#96;{{project_name}}&#96;)
++ 2. Path-mapped (&#96;ref_app&#96; → &#96;{{project_name}}&#96;)
 + 3. Content-mapped (package names, app IDs, etc.)
 + 4. No Mason variables added (copied as-is)
 + 
@@ -2275,7 +2275,7 @@ Lines added: 177, lines removed: 1
 + 
 + ### Script Fails to Find Reference Directory
 + 
-+ Ensure you're running from the project root and that &#96;ref/project-starter-ref/&#96; exists.
++ Ensure you're running from the project root and that &#96;ref/ref_app/&#96; exists.
 + 
 + ### Mason Variables Not Preserved
 + 
@@ -2310,7 +2310,7 @@ Lines added: 177, lines removed: 1
 
 - [x] Create main sync script (scripts/sync-template.dart) with CLI argument parsing, path resolution, and orchestration logic
 - [x] Implement Mason variable parser (sync-template_parser.dart) to extract {{#var}}...{{/var}}, {{^var}}...{{/var}}, and {{variable}} patterns from template files
-- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)
+- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)
 - [x] Implement smart merger (sync-template_merger.dart) that preserves Mason variable blocks while syncing content from ref to template
 - [x] Add file discovery, comparison, and sync logic (new files copy as-is, existing files smart merge, deleted files keep, binary files direct copy)
 - [x] Add dry-run mode, selective sync by path/pattern, and progress reporting
@@ -2334,7 +2334,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Found 304 files in reference
@@ -2352,7 +2352,7 @@ Unchanged: .metadata
 [DRY RUN] Would create: untranslated_msg_list.txt
 Unchanged: ios/Runner.xcworkspace/contents.xcworkspacedata
 Unhandled exception:
-FileSystemException: Failed to decode data using encoding 'utf-8', path = '/Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/ios/Runner.xcworkspace/xcuserdata/cirimin.xcuserdatad/UserInterfaceState.xcuserstate'
+FileSystemException: Failed to decode data using encoding 'utf-8', path = '/Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/ios/Runner.xcworkspace/xcuserdata/cirimin.xcuserdatad/UserInterfaceState.xcuserstate'
 #0      _File._tryDecode (dart:io/file_impl.dart:708:7)
 #1      _File.readAsString (dart:io/file_impl.dart:716:7)
 &lt;asynchronous suspension&gt;
@@ -2526,7 +2526,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Found 304 files in reference
@@ -2686,7 +2686,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Found 5 files in reference
@@ -2866,7 +2866,7 @@ Lint errors for `scripts/sync-template_merger.dart`
 
 - [x] Create main sync script (scripts/sync-template.dart) with CLI argument parsing, path resolution, and orchestration logic
 - [x] Implement Mason variable parser (sync-template_parser.dart) to extract {{#var}}...{{/var}}, {{^var}}...{{/var}}, and {{variable}} patterns from template files
-- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (project-starter-ref→{{project_name}}, package names, etc.)
+- [x] Build path/content mapper (sync-template_mapper.dart) to transform ref paths/names to template variables (ref_app→{{project_name}}, package names, etc.)
 - [x] Implement smart merger (sync-template_merger.dart) that preserves Mason variable blocks while syncing content from ref to template
 - [x] Add file discovery, comparison, and sync logic (new files copy as-is, existing files smart merge, deleted files keep, binary files direct copy)
 - [x] Add dry-run mode, selective sync by path/pattern, and progress reporting
@@ -3040,7 +3040,7 @@ Implemented an automated sync system for updating the Mason brick template from 
 ### Features
 
 - Smart merge: preserves `{{#var}}...{{/var}}` blocks while syncing content
-- Path mapping: transforms `project-starter-ref` → `{{project_name}}`, `id.logique.trial` → `{{app_id}}`, etc.
+- Path mapping: transforms `ref_app` → `{{project_name}}`, `id.logique.trial` → `{{app_id}}`, etc.
 - File handling:
   - Existing files: smart merge with variable preservation
   - New files: copy with path/content mapping
@@ -4411,7 +4411,7 @@ Reviewing the current implementation and exploring strategies for dynamic templa
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/lib/src/routing/app_router.dart</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/lib/src/routing/app_router.dart</summary>
 
 </details>
 </tool-use>
@@ -5495,7 +5495,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 
@@ -5550,7 +5550,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Loaded 0 default values from brick.yaml
@@ -5715,7 +5715,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Loaded 1 default values from brick.yaml
@@ -5845,7 +5845,7 @@ Mason Template Sync
 DRY RUN MODE - No files will be modified
 
 
-Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref
+Reference: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app
 Template:  /Users/cirimin/Logique/Project Starter/project-starter/src/__brick__/{{project_name}}
 
 Loaded 8 default values from brick.yaml
@@ -5989,7 +5989,7 @@ The implementation is ready to use. The sync script now compares templates seman
 
 _**User (2026-01-14 00:54Z)**_
 
-when i use the script it detect 12 files will be updated, in actual i only added small changes on @ref/project-starter-ref/lib/src/routing/app_router.dart 
+when i use the script it detect 12 files will be updated, in actual i only added small changes on @ref/ref_app/lib/src/routing/app_router.dart 
 
 ---
 
@@ -6013,7 +6013,7 @@ Investigating why the script detects changes in files that shouldn't have change
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/lib/src/routing/app_router.dart</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/lib/src/routing/app_router.dart</summary>
 
 </details>
 </tool-use>

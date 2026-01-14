@@ -184,7 +184,7 @@ The issue is in `_mergeWithVariables` in `sync-template_merger.dart`. It doesn't
 **The Problem:**
 
 In `_mergeWithVariables` (lines 228-253):
-1. It maps the ref content (replacing `project-starter-ref` → `{{project_name}}`, etc.)
+1. It maps the ref content (replacing `ref_app` → `{{project_name}}`, etc.)
 2. Sets `result = mappedRef` (just uses the mapped ref content)
 3. Checks if variables exist in result but doesn't preserve them from the template
 4. Compares `result` (mapped ref) with `templateContent` (original template with variables)
@@ -192,7 +192,7 @@ In `_mergeWithVariables` (lines 228-253):
 **The Bug:**
 
 The method doesn't replace actual values in the ref content with the corresponding Mason variables from the template. For example:
-- Ref has: `package project-starter-ref;`
+- Ref has: `package ref_app;`
 - After mapping: `package {{project_name}};`
 - Template has: `package {{project_name}};`
 - Comparison: They match, so `hasChanges = false`
@@ -315,14 +315,13 @@ _**Agent (model default, mode Agent)**_
 
 ---
 
-
 Examining a specific file to understand the issue, then fixing it.
 
 
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
-<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/project-starter-ref/lib/src/utils/data_source_config/sembast/sembast_codec.dart</summary>
+<details><summary>Tool use: **read_file** • Read file: /Users/cirimin/Logique/Project Starter/project-starter/ref/ref_app/lib/src/utils/data_source_config/sembast/sembast_codec.dart</summary>
 
 </details>
 </tool-use>
@@ -341,7 +340,6 @@ Examining a specific file to understand the issue, then fixing it.
 
 ---
 
-
 Noting formatting differences. Checking how the comparison handles files without Mason variables. Fixing the comparison logic:
 
 
@@ -358,7 +356,6 @@ Noting formatting differences. Checking how the comparison handles files without
 
 
 ---
-
 
 Fixing `_mergeWithVariables` to preserve Mason variables from the template while syncing content from the reference:
 
@@ -433,7 +430,6 @@ Lines added: 32, lines removed: 7
 
 ---
 
-
 Checking for lint errors and verifying the fix:
 
 
@@ -460,7 +456,6 @@ Lint results
 
 ---
 
-
 Improving the comparison to handle edge cases. The issue may also be in how we detect changes when content is identical except for variable positions. Enhancing the comparison logic:
 
 
@@ -478,13 +473,12 @@ Improving the comparison to handle edge cases. The issue may also be in how we d
 
 ---
 
-
 Fix applied. Summary of the issue and the fix:
 
 ## The Problem
 
 The `_mergeWithVariables` method had a bug where it:
-1. Mapped the ref content (replacing `project-starter-ref` → `{{project_name}}`, etc.)
+1. Mapped the ref content (replacing `ref_app` → `{{project_name}}`, etc.)
 2. Used the mapped ref content directly as the result
 3. Didn't preserve Mason variables from the template in their original positions
 4. Compared the mapped ref with the template, which could incorrectly mark files as unchanged when they should be synced

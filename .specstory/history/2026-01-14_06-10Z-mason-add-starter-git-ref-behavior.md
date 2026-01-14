@@ -19,7 +19,6 @@ _**Agent (model default, mode Ask)**_
 
 ---
 
-
 Checking Mason configuration and docs to determine what happens if `--git-ref` is omitted.
 
 
@@ -80,7 +79,6 @@ Checking Mason configuration and docs to determine what happens if `--git-ref` i
 
 ---
 
-
 Searching Mason documentation for the default behavior when `--git-ref` is omitted:
 
 
@@ -102,7 +100,6 @@ Searching Mason documentation for the default behavior when `--git-ref` is omitt
 
 
 ---
-
 
 If you remove `--git-ref main` from the command, Mason will use the repository's default branch (usually `main` or `master`).
 

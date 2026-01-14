@@ -1,0 +1,168 @@
+---
+alwaysApply: true
+---
+## PROJECT OVERVIEW
+The project is a Mason brick called `starter` that generates a production-ready Flutter app with:
+
+- Flavors: dev, stg, prod for Android & iOS
+- State management: Riverpod 3 with codegen
+- Routing: GoRouter with typed routes
+- Local storage: Sembast (encrypted)
+- Networking: Dio + Alice (optional)
+- Firebase: core + messaging + FlutterFire CLI wiring (optional)
+- Localization: EN + ID via ARB (optional)
+- UI infra: ScreenUtil-based responsive layout, theming, reusable widgets
+- Nice-to-haves: optional custom app icon, native splash, notifications
+
+The brick uses a reference Flutter app for development and testing and automates syncing between reference and template.
+
+## CODE STYLE
+- Follows Flutter and Dart best practices.
+- Uses a consistent naming convention.
+- Code should be well-documented.
+
+## FOLDER ORGANIZATION
+```
+project-starter/
+├── scripts/                  # Development and sync scripts
+│   ├── setup-reference.dart  # Generate reference project
+│   ├── sync-to-template.dart # Sync reference → template
+│   ├── sync-from-template.dart # Generate reference from template
+│   ├── test-template.dart    # Test template generation
+│   └── template-mappings.json # Conditional mapping configuration
+├── src/
+│   ├── __brick__/            # Template files (with Mustache variables)
+│   │   └── {{project_name}}/ # Project template
+│   ├── hooks/                  # Mason hooks
+│   │   ├── pre_gen.dart        # Pre-generation hook
+│   │   └── post_gen.dart       # Post-generation hook
+│   ├── brick.yaml            # Brick configuration
+│   └── README.md             # Brick-specific readme
+├── Makefile                  # Automation targets
+├── mason.yaml                # Local brick registry
+└── README.md                 # This file
+```
+
+## TECH STACK
+- Dart
+- Flutter
+- Mason
+- Riverpod
+- GoRouter
+- Sembast
+- Dio (optional)
+- Firebase (optional)
+- FlutterFire CLI (optional)
+- Flutter ScreenUtil
+- Flutter Form Builder
+
+## PROJECT-SPECIFIC STANDARDS
+- Use `.hardcoded` extension for UI strings instead of localization
+- Token refresh logic is commented out in Dio config
+- Android Kotlin package is created from `app_id` in post-gen hook
+- Some UI strings use `.hardcoded` extension (e.g., `'Silakan login'.hardcoded`) instead of localization
+- Several TODOs in router redirect logic and login screen
+
+## WORKFLOW & RELEASE RULES
+**Dual-Repository Approach**
+```
+project-starter/                    # Brick repository
+├── src/__brick__/                 # Template source (Mustache variables)
+│   └── {{project_name}}/
+├── reference/                     # Working Flutter project (actual runnable Flutter app)
+│   └── reference_app/
+│       ├── lib/
+│       ├── pubspec.yaml
+│       └── ...
+├── scripts/                       # Automation scripts
+│   ├── sync-to-template.dart     # Convert reference → template
+│   ├── sync-from-template.dart   # Convert template → reference
+│   └── test-template.dart        # Generate & test template
+└── test_output/                   # Generated test projects (gitignored)
+```
+
+**Git Strategy**
+```
+# Test outputs
+test_output/
+reference/reference_app/
+*.g.dart
+*.freezed.dart
+```
+
+**Branch strategy:**
+- `main` - Stable template
+- `dev` - Active development
+- `reference/` - Keep reference app in separate branch or submodule
+
+Template files in `src/__brick__/{{project_name}}/`
+Update variables in `src/brick.yaml`
+Modify hooks in `src/hooks/` for pre/post generation logic
+
+**Adding New Features**
+1. **Develop in Reference App** (recommended):
+```bash
+cd reference/reference_app
+# Make your changes
+flutter run --flavor dev
+```
+
+2. **Sync to Template**:
+```bash
+make sync-to-template
+```
+
+3. **Test Template**:
+```bash
+make test
+```
+
+**Direct Template Editing**
+If editing template directly:
+```bash
+# Edit files in src/__brick__/{{project_name}}/
+# Test generation
+make test
+# Verify in test_output/test_app
+```
+
+## REFERENCE EXAMPLES
+**Adding a Profile Feature**
+```bash
+# 1. Setup reference project
+make setup-reference
+
+# 2. Create profile feature
+cd test_output/reference_app/lib/src/feature
+mkdir -p profile/presentation
+# Create profile_screen.dart, profile_controller.dart, etc.
+
+# 3. Add route in app_router.dart
+# Edit test_output/reference_app/lib/src/routing/app_router.dart
+
+# 4. Test it
+cd test_output/reference_app
+flutter run --flavor dev
+
+# 5. Sync to template
+cd ../..
+make sync-to-template
+
+# 6. Verify template works
+make test
+```
+
+## PROJECT DOCUMENTATION & CONTEXT SYSTEM
+- Development workflow section
+- Instructions for adding new features
+- Sync workflow explanation
+- Troubleshooting for sync issues
+
+## DEBUGGING
+- Use the Alice HTTP debugging inspector for Dio.
+- Test template generation after each change.
+
+## FINAL DOs AND DON'Ts
+- Don't use multi branch or repository for the reference project, just use the existing one.
+- Don't edit the plan file directly, use the tool.
+- Trust code over README.

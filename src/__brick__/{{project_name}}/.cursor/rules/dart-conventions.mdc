@@ -67,7 +67,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'package:mm2100_mobile/src/theme/app_color_theme.dart';
+import 'package:{{project_name}}/src/theme/app_color_theme.dart';
 ```
 
 ## File Naming

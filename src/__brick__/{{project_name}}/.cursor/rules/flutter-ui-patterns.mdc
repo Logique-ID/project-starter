@@ -883,7 +883,7 @@ Every scrolling surface (paginated or not) must separate the **collection widget
 
 **Imports:**
 ```dart
-import 'package:mm2100_mobile/src/feature/task/presentation/widget/item_task_widget.dart';
+import 'package:{{project_name}}/src/feature/task/presentation/widget/item_task_widget.dart';
 ```
 
 ### Building Item Widgets

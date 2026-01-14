@@ -1,7 +1,7 @@
 ---
 alwaysApply: true
 ---
-# MM2100 Mobile Project Structure
+# {{app_name}} Project Structure
 
 This is a Flutter mobile application built with a feature-based architecture.
 
@@ -61,9 +61,9 @@ feature_name/
 ## Flavors
 
 The app supports three flavors:
-- **dev**: Development environment (`id.logique.mm2100.dev`)
-- **stg**: Staging environment (`id.logique.mm2100.stg`)
-- **prod**: Production environment (`id.logique.mm2100`)
+- **dev**: Development environment (`{{app_id}}.dev`)
+- **stg**: Staging environment (`{{app_id}}.stg`)
+- **prod**: Production environment (`{{app_id}}`)
 
 Flavor configuration is in [pubspec.yaml](mdc:pubspec.yaml) under `flavorizr`.
 

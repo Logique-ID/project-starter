@@ -1,0 +1,3 @@
+[submodule "ref/project-starter-ref"]
+	path = ref/project-starter-ref
+	url = https://github.com/Logique-ID/project-starter-ref.git

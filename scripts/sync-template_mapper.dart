@@ -6,8 +6,8 @@ class PathMapper {
   static String mapPath(String refPath) {
     String mapped = refPath;
 
-    // Replace ref_app directory name with {{project_name}}
-    mapped = mapped.replaceAll('ref_app', '{{project_name}}');
+    // Replace project-starter-ref directory name with {{project_name}}
+    mapped = mapped.replaceAll('project-starter-ref', '{{project_name}}');
 
     // Handle conditional file names (e.g., {{#use_firebase}}file.sh{{/use_firebase}})
     // These are already in template, so we need to preserve them
@@ -21,7 +21,7 @@ class PathMapper {
     String mapped = content;
 
     // Replace project name references
-    mapped = mapped.replaceAll('ref_app', '{{project_name}}');
+    mapped = mapped.replaceAll('project-starter-ref', '{{project_name}}');
 
     // Replace app ID references
     mapped = mapped.replaceAll(RegExp(r'\bid\.logique\.trial\b'), '{{app_id}}');
@@ -80,22 +80,25 @@ class PathMapper {
   static String getRelativeRefPath(String fullPath, String refRoot) {
     final refPath = Directory(refRoot).absolute.path;
     final filePath = File(fullPath).absolute.path;
-    
+
     if (!filePath.startsWith(refPath)) {
       throw ArgumentError('Path $filePath is not under $refRoot');
     }
-    
+
     return filePath.substring(refPath.length + 1);
   }
 
   /// Get the corresponding template path for a reference path
   static String getTemplatePath(String refRelativePath) {
-    // Replace ref_app with {{project_name}} in path
-    String templatePath = refRelativePath.replaceAll('ref_app', '{{project_name}}');
-    
+    // Replace project-starter-ref with {{project_name}} in path
+    String templatePath = refRelativePath.replaceAll(
+      'project-starter-ref',
+      '{{project_name}}',
+    );
+
     // Handle conditional file names - check if template has conditional version
     // This will be handled during file sync
-    
+
     return templatePath;
   }
 
@@ -107,7 +110,10 @@ class PathMapper {
   /// Extract the base file name from a conditional file name
   static String? extractBaseFileName(String conditionalFileName) {
     // Remove all Mason tags to get base name
-    final cleaned = conditionalFileName.replaceAll(RegExp(r'\{\{[#^/].*?\}\}'), '');
+    final cleaned = conditionalFileName.replaceAll(
+      RegExp(r'\{\{[#^/].*?\}\}'),
+      '',
+    );
     return cleaned.isEmpty ? null : cleaned;
   }
 }

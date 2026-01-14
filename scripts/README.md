@@ -4,7 +4,7 @@ Automated synchronization system for updating Mason brick templates from referen
 
 ## Overview
 
-The sync system updates the Mason brick template (`src/__brick__/{{project_name}}/`) from the reference project (`ref/ref_app/`) while intelligently preserving all existing Mason variable blocks like `{{#use_firebase}}...{{/use_firebase}}`.
+The sync system updates the Mason brick template (`src/__brick__/{{project_name}}/`) from the reference project (`ref/project-starter-ref/`) while intelligently preserving all existing Mason variable blocks like `{{#use_firebase}}...{{/use_firebase}}`.
 
 ## Usage
 
@@ -151,7 +151,7 @@ The impact analysis:
 1. **Parses Mason Blocks**: Extracts all `{{#var}}...{{/var}}`, `{{^var}}...{{/var}}`, and `{{variable}}` patterns from template files
 2. **Content Mapping**: Maps reference content to template structure while preserving variable wrappers
 3. **Block Preservation**: When reference content changes, maintains the variable conditions that wrap it
-4. **Path Normalization**: Handles transformations like `ref_app` → `{{project_name}}` and `id.logique.trial` → `{{app_id}}`
+4. **Path Normalization**: Handles transformations like `project-starter-ref` → `{{project_name}}` and `id.logique.trial` → `{{app_id}}`
 
 ### File Handling Strategy
 
@@ -163,10 +163,10 @@ The impact analysis:
 ### Path Transformations
 
 The script automatically transforms:
-- Directory names: `ref_app` → `{{project_name}}`
+- Directory names: `project-starter-ref` → `{{project_name}}`
 - Package names: `id.logique.trial` → `{{app_id}}`
 - App names: `"Trial"` → `"{{app_name}}"`
-- Project names: `ref_app` → `{{project_name}}`
+- Project names: `project-starter-ref` → `{{project_name}}`
 
 ## Architecture
 
@@ -184,9 +184,9 @@ The script automatically transforms:
 
 ### Example 1: Syncing pubspec.yaml
 
-**Reference (ref/ref_app/pubspec.yaml):**
+**Reference (ref/project-starter-ref/pubspec.yaml):**
 ```yaml
-name: ref_app
+name: project-starter-ref
 dependencies:
   firebase_core: 4.2.1
 ```
@@ -215,7 +215,7 @@ The `{{#use_firebase}}` block is preserved even though the reference doesn't hav
 
 If a new file `lib/src/new_feature.dart` is added to the reference, it will be:
 1. Copied to the template
-2. Path-mapped (`ref_app` → `{{project_name}}`)
+2. Path-mapped (`project-starter-ref` → `{{project_name}}`)
 3. Content-mapped (package names, app IDs, etc.)
 4. No Mason variables added (copied as-is)
 
@@ -280,7 +280,7 @@ This means files won't be marked as changed if the only differences are:
 
 ### Script Fails to Find Reference Directory
 
-Ensure you're running from the project root and that `ref/ref_app/` exists.
+Ensure you're running from the project root and that `ref/project-starter-ref/` exists.
 
 ### Mason Variables Not Preserved
 

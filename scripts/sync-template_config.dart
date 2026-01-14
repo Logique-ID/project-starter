@@ -1,13 +1,13 @@
 /// Configuration and patterns for template synchronization
 class SyncConfig {
   /// Path to reference project
-  static const String refPath = 'ref/ref_app';
+  static const String refPath = 'ref/project-starter-ref';
 
   /// Path to template directory
   static const String templatePath = 'src/__brick__/{{project_name}}';
 
   /// Reference project name (to be replaced with {{project_name}})
-  static const String refProjectName = 'ref_app';
+  static const String refProjectName = 'project-starter-ref';
 
   /// Reference app ID pattern (to be replaced with {{app_id}})
   static const String refAppId = 'id.logique.trial';
@@ -43,6 +43,7 @@ class SyncConfig {
   static const List<String> whitelistIgnore = [
     /// general flutter
     'pubspec.yaml',
+    '.git',
 
     /// android
     'android/app/src/main/kotlin/',
@@ -114,7 +115,7 @@ class SyncConfig {
 
   /// Known Mason variable patterns for path mapping
   static const Map<String, String> variableMappings = {
-    'ref_app': '{{project_name}}',
+    'project-starter-ref': '{{project_name}}',
     'id.logique.trial': '{{app_id}}',
     'Trial': '{{app_name}}',
   };

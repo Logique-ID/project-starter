@@ -5,9 +5,9 @@ import 'sync-template_merger.dart';
 
 /// Represents the impact of a file change
 enum ImpactType {
-  direct,      // File is directly updated/created
-  dependency,  // File depends on a changed file
-  breaking,    // Potential breaking change
+  direct, // File is directly updated/created
+  dependency, // File depends on a changed file
+  breaking, // Potential breaking change
 }
 
 /// Represents an impacted file
@@ -16,7 +16,7 @@ class ImpactedFile {
   final ImpactType type;
   final String reason;
   final List<String> dependencies; // Files this depends on
-  final List<String> dependents = [];   // Files that depend on this
+  final List<String> dependents = []; // Files that depend on this
 
   ImpactedFile({
     required this.path,
@@ -59,7 +59,10 @@ class ImpactAnalyzer {
     // Build dependency graph for Dart files
     final dartFiles = refFiles.where((f) => f.path.endsWith('.dart')).toList();
     for (final dartFile in dartFiles) {
-      final relativePath = PathMapper.getRelativeRefPath(dartFile.path, refRoot.path);
+      final relativePath = PathMapper.getRelativeRefPath(
+        dartFile.path,
+        refRoot.path,
+      );
       if (SyncConfig.shouldIgnore(relativePath)) continue;
 
       try {
@@ -73,7 +76,10 @@ class ImpactAnalyzer {
 
     // Analyze each reference file
     for (final refFile in refFiles) {
-      final relativePath = PathMapper.getRelativeRefPath(refFile.path, refRoot.path);
+      final relativePath = PathMapper.getRelativeRefPath(
+        refFile.path,
+        refRoot.path,
+      );
       final templatePath = PathMapper.getTemplatePath(relativePath);
       final templateFile = File('${templateRoot.path}/$templatePath');
 
@@ -92,18 +98,22 @@ class ImpactAnalyzer {
       if (isBinary) {
         if (templateFile.existsSync()) {
           // Binary file will be updated
-          directChanges.add(ImpactedFile(
-            path: relativePath,
-            type: ImpactType.direct,
-            reason: 'Binary file will be copied',
-          ));
+          directChanges.add(
+            ImpactedFile(
+              path: relativePath,
+              type: ImpactType.direct,
+              reason: 'Binary file will be copied',
+            ),
+          );
         } else {
           // New binary file
-          directChanges.add(ImpactedFile(
-            path: relativePath,
-            type: ImpactType.direct,
-            reason: 'New binary file will be created',
-          ));
+          directChanges.add(
+            ImpactedFile(
+              path: relativePath,
+              type: ImpactType.direct,
+              reason: 'New binary file will be created',
+            ),
+          );
         }
         continue;
       }
@@ -111,25 +121,33 @@ class ImpactAnalyzer {
       // Text file analysis
       if (!templateFile.existsSync()) {
         // New file
-        directChanges.add(ImpactedFile(
-          path: relativePath,
-          type: ImpactType.direct,
-          reason: 'New file will be created',
-        ));
+        directChanges.add(
+          ImpactedFile(
+            path: relativePath,
+            type: ImpactType.direct,
+            reason: 'New file will be created',
+          ),
+        );
       } else {
         // Existing file - check for changes
         try {
           final refContent = await refFile.readAsString();
           final templateContent = await templateFile.readAsString();
-          final mergeResult = SmartMerger.merge(refContent, templateContent, relativePath);
+          final mergeResult = SmartMerger.merge(
+            refContent,
+            templateContent,
+            relativePath,
+          );
 
           if (mergeResult.hasChanges) {
-            directChanges.add(ImpactedFile(
-              path: relativePath,
-              type: ImpactType.direct,
-              reason: 'File content will be updated',
-              dependencies: dependencyGraph[relativePath] ?? [],
-            ));
+            directChanges.add(
+              ImpactedFile(
+                path: relativePath,
+                type: ImpactType.direct,
+                reason: 'File content will be updated',
+                dependencies: dependencyGraph[relativePath] ?? [],
+              ),
+            );
           }
         } catch (e) {
           // Skip files we can't analyze
@@ -146,13 +164,17 @@ class ImpactAnalyzer {
       // Check if this file imports any changed file
       final hasDependency = imports.any((imp) => changedPaths.contains(imp));
       if (hasDependency && !changedPaths.contains(filePath)) {
-        final dependentOn = imports.where((imp) => changedPaths.contains(imp)).toList();
-        indirectImpacts.add(ImpactedFile(
-          path: filePath,
-          type: ImpactType.dependency,
-          reason: 'Depends on changed files: ${dependentOn.join(", ")}',
-          dependencies: dependentOn,
-        ));
+        final dependentOn = imports
+            .where((imp) => changedPaths.contains(imp))
+            .toList();
+        indirectImpacts.add(
+          ImpactedFile(
+            path: filePath,
+            type: ImpactType.dependency,
+            reason: 'Depends on changed files: ${dependentOn.join(", ")}',
+            dependencies: dependentOn,
+          ),
+        );
       }
     }
 
@@ -202,17 +224,22 @@ class ImpactAnalyzer {
   }
 
   /// Process a single import path
-  static void _processImport(String importPath, String filePath, List<String> imports) {
+  static void _processImport(
+    String importPath,
+    String filePath,
+    List<String> imports,
+  ) {
     // Convert package import to relative path
     if (importPath.startsWith('package:')) {
       // Extract package name and path
       final packagePath = importPath.substring(8); // Remove 'package:'
       final parts = packagePath.split('/');
-      
+
       // Try to map to file path (simplified - assumes standard structure)
       if (parts.isNotEmpty) {
-        // For ref_app, map to relative path
-        if (parts[0] == 'ref_app' || parts[0].contains('ref_app')) {
+        // For project-starter-ref, map to relative path
+        if (parts[0] == 'project-starter-ref' ||
+            parts[0].contains('project-starter-ref')) {
           final relativeImport = parts.sublist(1).join('/') + '.dart';
           imports.add(relativeImport);
         }
@@ -252,23 +279,23 @@ class ImpactAnalyzer {
   /// Discover files (same as in sync-template.dart)
   static List<File> _discoverFiles(Directory root, {String? specificPath}) {
     final files = <File>[];
-    
+
     void traverse(Directory dir) {
       if (!dir.existsSync()) return;
-      
+
       try {
         final entities = dir.listSync(recursive: false);
-        
+
         for (final entity in entities) {
           if (entity is File) {
             final relativePath = entity.path.substring(root.path.length + 1);
-            
+
             if (specificPath != null) {
               if (!relativePath.startsWith(specificPath)) {
                 continue;
               }
             }
-            
+
             if (!SyncConfig.shouldIgnore(relativePath)) {
               files.add(entity);
             }
@@ -280,7 +307,7 @@ class ImpactAnalyzer {
         // Skip directories we can't read
       }
     }
-    
+
     traverse(root);
     return files;
   }

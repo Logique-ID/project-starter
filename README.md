@@ -47,7 +47,7 @@ Before using this brick, ensure you have:
 Add directly from Git in your global mason configuration:
 
 ```bash
-mason add starter --git-url <repository-url> --git-path src --git-ref <ref>
+mason add starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref main
 ```
 
 ## Usage

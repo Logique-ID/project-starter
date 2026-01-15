@@ -42,15 +42,18 @@ class SyncConfig {
   /// Use exact names (case-sensitive), e.g., 'specific_file.dart' or 'folder_name/'
   static const List<String> whitelistIgnore = [
     /// general flutter
-    'pubspec.yaml',
     '.git',
     '.specstory/',
     '.cursorindexingignore',
+    '.cursorignore',
+    '.cursor/rules/derived-cursor-rules.mdc',
+    '.flutter-plugins-dependencies',
 
     /// android
     'android/app/src/main/kotlin/',
     'android/gradle/wrapper/gradle-wrapper.jar',
     'android/local.properties',
+    'android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java',
 
     /// ios
     'ios/Flutter/',
@@ -64,9 +67,9 @@ class SyncConfig {
     'ios/Runner/Assets.xcassets/AppIcon.appiconset/',
     'ios/Runner/Assets.xcassets/LaunchBackground.imageset/',
     'ios/Runner.xcworkspace/xcuserdata/',
-    'ios/Runner.xcodeproj/project.pbxproj',
     'ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/',
     'ios/Podfile.lock',
+    'ios/Runner/GeneratedPluginRegistrant.m',
 
     /// assets
     'app-icon.png',
@@ -112,7 +115,6 @@ class SyncConfig {
     'ios/Flutter/ephemeral/',
     'ios/Flutter/Flutter.framework/',
     'ios/Flutter/Flutter.podspec',
-    'pubspec.lock',
     '.DS_Store',
     '*.iml',
   ];

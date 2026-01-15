@@ -105,4 +105,10 @@ Future<void> run(HookContext context) async {
       );
     }
   }
+
+  await HookHelper.runCommand(
+    context,
+    command: 'dart',
+    arguments: ['format', '.'],
+  );
 }

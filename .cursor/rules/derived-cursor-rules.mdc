@@ -1,6 +1,8 @@
 ---
-alwaysApply: true
+description: AI rules derived by SpecStory from the project AI interaction history
+globs: *
 ---
+
 ## PROJECT OVERVIEW
 The project is a Mason brick called `starter` that generates a production-ready Flutter app with:
 
@@ -15,6 +17,8 @@ The project is a Mason brick called `starter` that generates a production-ready 
 - Nice-to-haves: optional custom app icon, native splash, notifications
 
 The brick uses a reference Flutter app for development and testing and automates syncing between reference and template.
+
+The core purpose is to provide a template system using Mason to generate Flutter projects from templates. It maintains a reference project (`ref/project-starter-ref/`) as the source of truth, with automated sync scripts to update templates while preserving Mason variable conditions.
 
 ## CODE STYLE
 - Follows Flutter and Dart best practices.
@@ -44,17 +48,25 @@ project-starter/
 ```
 
 ## TECH STACK
-- Dart
-- Flutter
+- Dart SDK: `>=3.38.0 <4.0.0`
+- Flutter SDK: `^3.8.1`
 - Mason
-- Riverpod
-- GoRouter
-- Sembast
-- Dio (optional)
+- Riverpod 3.0.3
+- GoRouter 17.0.0
+- Sembast 3.8.5+2
+- Dio 5.9.0 (optional)
 - Firebase (optional)
 - FlutterFire CLI (optional)
-- Flutter ScreenUtil
-- Flutter Form Builder
+- Flutter ScreenUtil 5.9.3
+- Flutter Form Builder 10.2.0
+- Alice HTTP debugging inspector
+- build_runner: 2.10.2 (dev dependency)
+- riverpod_generator: 3.0.3 (dev dependency)
+- flutter_flavorizr: 2.4.1 (dev dependency)
+- encrypt: 5.0.3
+- google_fonts: 6.3.2
+- flutter_svg: 2.2.2
+- form_builder_validators: 11.2.0
 
 ## PROJECT-SPECIFIC STANDARDS
 - Use `.hardcoded` extension for UI strings instead of localization
@@ -126,6 +138,407 @@ make test
 # Verify in test_output/test_app
 ```
 
+**Sync Script Features**
+- `--dry-run` / `-n`: Preview changes without modifying files
+- `--verbose` / `-v`: Detailed output for each file
+- `--show-impact` / `-v`: Preview which files will be affected
+- `--interactive` / `-i`: Choose which files to sync
+- `--path <path>`: Sync specific directory only
+
+**Submodules**
+
+If the reference project is managed as a Git submodule:
+
+1.  **Clone with submodules:**
+    ```bash
+    git clone --recursive <project-starter-repo-url>
+    ```
+2.  **Initialize after cloning** (if you cloned without `--recursive`):
+    ```bash
+    cd project-starter
+    git submodule update --init --recursive
+    ```
+3. **Updating the reference project**
+    ```bash
+    # Navigate to submodule
+    cd ref/project-starter-ref
+    # Pull latest changes
+    git pull origin main
+    # Go back to parent
+    cd ../..
+    # Commit the submodule update
+    git add ref/project-starter-ref
+    git commit -m "Update ref_app submodule to latest"
+    ```
+
+**Converting to Git Submodule**
+
+### Prerequisites
+
+1. The reference project (`ref_app`) should be in its own Git repository (GitHub, GitLab, etc.)
+2. If `ref/ref_app` is not yet a separate repo, create one first
+
+### Option A: If `ref_app` is already a separate repository
+
+If `ref_app` already exists as a separate repository:
+
+```bash
+# 1. Remove the current ref/ref_app directory (backup first if needed)
+# Make sure you've committed any important changes
+cd /Users/cirimin/Logique/Project\ Starter/project-starter
+
+# 2. Remove from git tracking (but keep files locally temporarily)
+git rm -r --cached ref/ref_app
+
+# 3. Remove the directory
+rm -rf ref/ref_app
+
+# 4. Add as submodule (replace <repo-url> with actual URL)
+git submodule add <repo-url> ref/ref_app
+
+# 5. Initialize and update submodules
+git submodule update --init --recursive
+
+# 6. Commit the submodule addition
+git add .gitmodules ref/ref_app
+git commit -m "Convert ref_app to git submodule"
+```
+
+### Option B: If `ref_app` needs to be created as a new repository
+
+If `ref_app` is currently just a local directory:
+
+```bash
+# 1. Create a new repository for ref_app (on GitHub/GitLab/etc.)
+# Let's say the URL is: https://github.com/yourorg/ref_app.git
+
+# 2. Initialize ref_app as its own git repo
+cd ref/ref_app
+git init
+git add .
+git commit -m "Initial commit: Reference Flutter app for Mason template"
+
+# 3. Add remote and push
+git remote add origin <repo-url>
+git branch -M main
+git push -u origin main
+
+# 4. Go back to project-starter root
+cd ../..
+
+# 5. Remove from parent repo tracking
+git rm -r --cached ref/ref_app
+
+# 6. Remove the directory
+rm -rf ref/ref_app
+
+# 7. Add as submodule
+git submodule add <repo-url> ref/ref_app
+
+# 8. Commit
+git add .gitmodules ref/ref_app
+git commit -m "Convert ref_app to git submodule"
+```
+
+**Post-Setup: Update .gitignore (Optional)**
+
+You might want to ensure `.gitignore` doesn't accidentally ignore the submodule:
+
+```gitignore
+# .gitignore
+.mason
+mason-lock.json
+
+# Don't ignore submodules
+!ref/ref_app
+```
+
+**Daily Workflow with Submodules**
+
+**For team members cloning the project:**
+```bash
+# Clone with submodules
+git clone --recursive <project-starter-repo-url>
+
+# Or if already cloned
+git submodule update --init --recursive
+```
+
+**To update the reference project:**
+```bash
+# Navigate to submodule
+cd ref/project-starter-ref
+
+# Pull latest changes
+git pull origin main
+
+# Go back to parent
+cd ../..
+
+# Commit the submodule update
+git add ref/project-starter-ref
+git commit -m "Update ref_app submodule to latest"
+```
+
+**To work on ref_app and sync back:**
+```bash
+cd ref/ref_app
+# Make changes, commit, push
+git add .
+git commit -m "Update feature X"
+git push origin main
+
+# Update parent repo to point to new commit
+cd ../..
+git add ref/ref_app
+git commit -m "Update ref_app submodule"
+```
+
+The sync script will work as-is because it only checks if the directory exists.
+
+**Removing a git submodule**
+
+**Do not just delete the directory.** Git tracks submodules in multiple places. Remove it like this:
+
+```bash
+# 1. Remove the submodule entry from .gitmodules
+git rm --cached ref/ref_app
+
+# 2. Remove the submodule entry from .git/config
+# (This is done automatically by step 1, but verify)
+# Check if it exists:
+cat .git/config | grep -A 3 "submodule.*ref/ref_app"
+
+# 3. Remove the submodule directory from .git/modules/
+rm -rf .git/modules/ref/ref_app
+
+# 4. Remove the actual directory
+rm -rf ref/ref_app
+
+# 5. Remove from .gitmodules file (if step 1 didn't fully remove it)
+# Edit .gitmodules and remove the [submodule "ref/ref_app"] section
+# Or use:
+git config -f .gitmodules --remove-section submodule.ref/ref_app 2>/dev/null || true
+
+# 6. Remove from .git/config (if still present)
+git config -f .git/config --remove-section submodule.ref/ref_app 2>/dev/null || true
+
+# 7. Remove from git index (staging area)
+git rm -f ref/ref_app
+
+# 8. Commit the removal
+git add .gitmodules
+git commit -m "Remove ref_app submodule"
+```
+
+**If You Want to Keep the Files (Convert Back to Regular Directory)**
+
+If you want to keep the files but remove submodule tracking:
+
+```bash
+# 1. Remove submodule tracking (same as above)
+git rm --cached ref/ref_app
+git config -f .gitmodules --remove-section submodule.ref/ref_app
+git config -f .git/config --remove-section submodule.ref/ref_app
+rm -rf .git/modules/ref/ref_app
+
+# 2. Move files out temporarily
+mv ref/ref_app ref/ref_app_backup
+
+# 3. Remove empty directory
+rmdir ref/ref_app 2>/dev/null || true
+
+# 4. Restore files as regular directory
+mv ref/ref_app_backup ref/ref_app
+
+# 5. Add as regular files (not submodule)
+git add ref/ref_app
+
+# 6. Commit
+git commit -m "Convert ref_app from submodule to regular directory"
+```
+
+**Cloning the Repository with Submodules**
+
+By default, `git clone` only clones the main repository. Submodules are separate repositories, so they require explicit initialization.
+
+**Option 1: Clone with `--recursive` (Recommended)**
+
+Clone the parent repository and all submodules in one command:
+
+```bash
+git clone --recursive <project-starter-repo-url>
+```
+
+Or use the shorter alias:
+
+```bash
+git clone --recursive-submodules <project-starter-repo-url>
+```
+
+**Option 2: Initialize After Cloning**
+
+If you already cloned without `--recursive`:
+
+```bash
+# Navigate to the cloned repository
+cd project-starter
+
+# Initialize and clone all submodules
+git submodule update --init --recursive
+```
+
+Or just initialize (without recursive if no nested submodules):
+
+```bash
+git submodule update --init
+```
+
+**Option 3: Configure Git to Auto-Initialize Submodules**
+
+Set this globally to auto-initialize submodules on clone:
+
+```bash
+git config --global submodule.recurse true
+```
+
+After this, `git clone` will automatically initialize submodules.
+
+**Updating Submodule Reference**
+
+The parent repo does **not** auto‑update the submodule reference when new commits land in the submodule’s own repo.
+
+The parent repo stores **one specific commit SHA** for each submodule (like a pinned version).
+
+To update the parent to a newer submodule commit:
+
+1. Go into the submodule and pull new changes:
+
+```bash
+cd ref/project-starter-ref
+git pull origin main   # or whatever branch you use
+```
+
+2. Go back to the parent repo and stage the new submodule pointer:
+
+```bash
+cd ../..               # back to project-starter
+git status             # you'll see ref/project-starter-ref as modified
+git add ref/project-starter-ref
+git commit -m "Update project-starter-ref submodule"
+```
+
+**Tracking a Branch**
+
+You can use a branch (e.g. `dev`) of `project-starter-ref` as your “active reference”.
+
+1. For your own development and `sync-template.dart`, you can just work on a branch inside the submodule:
+
+```bash
+cd ref/project-starter-ref
+git checkout dev          # or any branch you use for active development
+git pull origin dev       # get latest
+
+cd ../..
+dart run scripts/sync-template.dart
+```
+
+2.  Parent repo tracking a branch (more automated)
+
+You can tell Git that the submodule should **track a branch** (e.g. `dev`) instead of a fixed commit, then use `--remote` when updating:
+
+1. Configure branch in `.gitmodules`:
+
+```ini
+[submodule "ref/project-starter-ref"]
+    path = ref/project-starter-ref
+    url = https://github.com/Logique-ID/project-starter-ref.git
+    branch = dev
+```
+
+2. Apply the config and commit it:
+
+```bash
+git submodule sync
+git add .gitmodules
+git commit -m "Track dev branch for project-starter-ref submodule"
+```
+
+3. When you want to update to latest `dev` in the parent:
+
+```bash
+git submodule update --remote --init --recursive
+# or, more specific:
+git submodule update --remote ref/project-starter-ref
+```
+
+- `--remote` makes Git fetch the remote and checkout the **tip of the configured branch** (`dev`) instead of just the pinned SHA.
+- After this, you still need to commit in the parent:
+
+```bash
+git add ref/project-starter-ref
+git commit -m "Update project-starter-ref to latest dev"
+```
+
+**Important: Template Variables in README**
+
+The file `src/__brick__/{{project_name}}/README.md` is the template file. Mason variables like `{{project_name}}` are only replaced when the brick is run and a project is generated. To verify the replacement, run the brick to a test output directory:
+
+```bash
+cd "/Users/cirimin/Logique/Project Starter/project-starter"
+mason make starter -o ./test_output
+```
+
+Then open:
+
+`test_output/<your_project_name>/README.md`
+
+There you should see the actual values (e.g. `# my_app` and `My App - A Flutter application.`), while the template under `src/__brick__/{{project_name}}/README.md` will (and should) still show the `{{...}}` placeholders.
+
+You’re seeing Mustache in `simple/README.md` because `simple` is currently just a **copy of the template**, not a project actually **generated by Mason**.
+
+In other words, Mason never rendered the variables for that folder, so the file is identical to `src/__brick__/{{project_name}}/README.md`.
+
+### How to get a README with real values
+
+From the repo root, generate a project with Mason instead of copying the template:
+
+```bash
+cd "/Users/cirimin/Logique/Project Starter/project-starter"
+
+# Make sure Mason knows about the local brick (if not already)
+mason get
+
+# Generate a project into a fresh directory (e.g. simple_app)
+mason make starter -o ./simple_app
+```
+
+Then open:
+
+```text
+/Users/cirimin/Logique/Project Starter/project-starter/simple_app/README.md
+```
+
+You should now see:
+
+- `# <your_project_name>` instead of `# {{project_name}}`
+- `<Your App Name> - A Flutter application.` instead of `{{app_name}} - A Flutter application.`
+- The `{{#use_firebase}}` / `{{^use_firebase}}` blocks resolved according to your answers.
+
+If you specifically want `simple/` to be the generated app, either:
+
+- Delete/rename the existing `simple` folder and run:
+
+  ```bash
+  mason make starter -o ./simple
+  ```
+
+- Or run with overwrite (only if you’re okay clobbering what’s there):
+
+  ```bash
+  mason make starter -o ./simple --on-conflict overwrite
+  ```
+
 ## REFERENCE EXAMPLES
 **Adding a Profile Feature**
 ```bash
@@ -157,6 +570,12 @@ make test
 - Instructions for adding new features
 - Sync workflow explanation
 - Troubleshooting for sync issues
+- Updated `.cursor` rules to use Mason variables:
+  - **`dart-conventions.mdc`**: Replaced the import with `package:{{project_name}}/src/theme/app_color_theme.dart`.
+  - **`flutter-ui-patterns.mdc`**: Replaced the import with `package:{{project_name}}/src/feature/task/presentation/widget/item_task_widget.dart`.
+  - **`project-structure.mdc`**:
+    - Changed the title to `{{app_name}} Project Structure`.
+    - Changed flavor bundle IDs to use `{{app_id}}.dev`, `{{app_id}}.stg`, and `{{app_id}}`.
 
 ## DEBUGGING
 - Use the Alice HTTP debugging inspector for Dio.

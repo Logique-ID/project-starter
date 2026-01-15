@@ -1341,3 +1341,99 @@ will get that exact new submodule commit.
 
 ---
 
+_**User (2026-01-14 07:24Z)**_
+
+if i use branch for project-starter-ref update development, can we use those branch as active reference?
+
+---
+
+_**Agent (model default, mode Ask)**_
+
+<think><details><summary>Thought Process</summary>
+**Clarifying submodule tracking**
+
+The user is asking about tracking a submodule branch. Yes, it's best to use the submodule branch config and run `git submodule update --remote`. For their development workflow, they can change directories into the submodule and pull while on the desired branch. I think I need to provide a concise explanation of the two options: pinned commit (default) versus tracking branch using `.gitmodules` with `branch = dev`. Additionally, in local development, they can switch to a branch in the submodule without issues.</details></think>
+
+---
+
+Yes, you can use a branch (e.g. `dev`) of `project-starter-ref` as your “active reference”, but there are two different levels to think about:
+
+---
+
+### 1. Your **local development** workflow (easiest)
+
+For your own development and `sync-template.dart`, you can just work on a branch inside the submodule:
+
+```bash
+cd ref/project-starter-ref
+git checkout dev          # or any branch you use for active development
+git pull origin dev       # get latest
+
+cd ../..
+dart run scripts/sync-template.dart
+```
+
+- The sync script only cares about the **checked‑out working tree** under `ref/project-starter-ref`, not which commit the parent points to.
+- So locally, you can always keep `dev` branch checked out and treat it as your “active reference”.
+
+The downside: other people who clone `project-starter` will not automatically be on `dev` unless they also check it out in the submodule.
+
+---
+
+### 2. Parent repo tracking a branch (more automated)
+
+You can tell Git that the submodule should **track a branch** (e.g. `dev`) instead of a fixed commit, then use `--remote` when updating:
+
+1. Configure branch in `.gitmodules`:
+
+```ini
+[submodule "ref/project-starter-ref"]
+    path = ref/project-starter-ref
+    url = https://github.com/Logique-ID/project-starter-ref.git
+    branch = dev
+```
+
+2. Apply the config and commit it:
+
+```bash
+git submodule sync
+git add .gitmodules
+git commit -m "Track dev branch for project-starter-ref submodule"
+```
+
+3. When you want to update to latest `dev` in the parent:
+
+```bash
+git submodule update --remote --init --recursive
+# or, more specific:
+git submodule update --remote ref/project-starter-ref
+```
+
+- `--remote` makes Git fetch the remote and checkout the **tip of the configured branch** (`dev`) instead of just the pinned SHA.
+- After this, you still need to commit in the parent:
+
+```bash
+git add ref/project-starter-ref
+git commit -m "Update project-starter-ref to latest dev"
+```
+
+Now:
+- Locally: submodule will move to latest `dev` when you run `git submodule update --remote ...`
+- For others: when they pull the parent and run `git submodule update --init --recursive`, they get the **exact commit** you pinned (even though it came from `dev`).
+
+---
+
+### Recommended Setup for You
+
+- **For day‑to‑day development / syncing:**
+  - Keep `ref/project-starter-ref` on branch `dev`
+  - Run `git pull origin dev` in that submodule before `sync-template.dart`
+
+- **Optionally for team / CI:**
+  - Add `branch = dev` in `.gitmodules`
+  - Use `git submodule update --remote` when you explicitly want to move the parent to the latest reference
+
+So yes: you *can* use a branch as the active reference—either by just checking that branch out in the submodule for your local sync, or by configuring `.gitmodules` + `--remote` so the parent knows “this submodule follows `dev`”.
+
+---
+

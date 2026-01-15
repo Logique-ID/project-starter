@@ -34,7 +34,7 @@ This project was generated using the [Starter Mason Brick](https://github.com/fe
      ```
 
 {{/use_firebase}}
-{{#use_firebase}}4{{^use_firebase}}3{{/use_firebase}}. **Important**: Rename the Android Kotlin directory to match your app ID:
+{{#use_firebase}}4{{/use_firebase}}{{^use_firebase}}3{{/use_firebase}}. **Important**: Rename the Android Kotlin directory to match your app ID:
    - Move `android/app/src/main/kotlin/id/logique/trial/` to match your `app_id` structure
    - For example, if your app_id is `com.example.myapp`, rename to `android/app/src/main/kotlin/com/example/myapp/`
 

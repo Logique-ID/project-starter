@@ -22,6 +22,7 @@ plugins {
     {{#use_firebase}}
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.3.15") apply false
+    id("com.google.firebase.crashlytics") version("2.8.1") apply false
     // END: FlutterFire Configuration
     {{/use_firebase}}
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false

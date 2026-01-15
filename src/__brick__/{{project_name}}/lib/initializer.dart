@@ -1,6 +1,8 @@
 {{#use_firebase}}
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 {{/use_firebase}}
 import 'package:flutter/material.dart';
 {{#use_splash}}
@@ -12,7 +14,6 @@ import 'src/routing/app_startup.dart';
 {{#use_firebase}}
 import 'src/service/firebase/firebase_service.dart';
 {{/use_firebase}}
-
 Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOptions}{{/use_firebase}}) async {
   {{#use_splash}}
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +22,27 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
   {{^use_splash}}
   WidgetsFlutterBinding.ensureInitialized();
   {{/use_splash}}
-
   {{#use_firebase}}
   await Firebase.initializeApp(options: firebaseOptions);
+
+  // Initialize Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+
+  // Pass all uncaught asynchronous errors to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Enable Crashlytics collection only in non-debug builds
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+    kReleaseMode,
+  );
+
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   {{/use_firebase}}
-
   runApp(
     ProviderScope(
       retry: (retryCount, error) => null,

@@ -3,6 +3,7 @@ plugins {
     {{#use_firebase}}
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
     {{/use_firebase}}
     id("kotlin-android")

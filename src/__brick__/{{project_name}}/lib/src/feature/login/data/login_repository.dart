@@ -2,11 +2,18 @@
 import 'package:dio/dio.dart';
 {{/use_dio}}
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 {{#use_dio}}
 import '../../../../flavor.dart';
+{{#use_firebase}}
+import '../../../utils/common_utils.dart';
+{{/use_firebase}}
 import '../../../utils/data_source_config/dio/dio_config.dart';
 import '../../authentication/data/auth_repository.dart';
+{{/use_dio}}
+{{^use_dio}}
+{{#use_firebase}}
+import '../../../utils/common_utils.dart';
+{{/use_firebase}}
 {{/use_dio}}
 import '../domain/login_response.dart';
 
@@ -52,12 +59,22 @@ Future<LoginResponse> login(
     return result;
   } on DioException catch (error) {
     return onDioError(error);
-  } catch (e) {
+  } catch (e, stackTrace) {
+    {{#use_firebase}}
+    // Record to Log Monitoring
+    CommonUtils.printAndRecordLog(e, stackTrace.toString());
+    {{/use_firebase}}
     rethrow;
   }
   {{/use_dio}}
   {{^use_dio}}
-  // TODO: Implement HTTP client of your choice (e.g., http package, chopper, etc.)
-  throw UnimplementedError('Login not implemented. Please implement your HTTP client.');
+  try {
+    // TODO: Implement HTTP client of your choice (e.g., http package, chopper, etc.)
+    throw UnimplementedError('Login not implemented. Please implement your HTTP client.');
+  } catch (e, stackTrace) {
+    // Record to Log Monitoring
+    CommonUtils.printAndRecordLog(e, stackTrace.toString());
+    rethrow;
+  }
   {{/use_dio}}
 }

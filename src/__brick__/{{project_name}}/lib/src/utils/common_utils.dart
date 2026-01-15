@@ -1,11 +1,22 @@
 import 'dart:convert';
 import 'dart:developer';
+{{#use_firebase}}
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+{{/use_firebase}}
 
 class CommonUtils {
   static void printAndRecordLog(dynamic error, String stackTrace) {
-    //TODO tidy up log and record to log monitoring
+    // Log to console
     log(error.toString());
     log(stackTrace);
+    {{#use_firebase}}
+    // Record non-fatal error to Crashlytics
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      StackTrace.fromString(stackTrace),
+      printDetails: false,
+    );
+    {{/use_firebase}}
   }
 
   static Map<String, dynamic> decodeTokenAsJson(String code) {

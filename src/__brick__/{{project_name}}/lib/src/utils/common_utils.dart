@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
-{{#use_firebase}}
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-{{/use_firebase}}
+{{#use_firebase}}import 'package:firebase_crashlytics/firebase_crashlytics.dart';{{/use_firebase}}
+{{#use_sentry}}import 'package:sentry_flutter/sentry_flutter.dart';{{/use_sentry}}
 
 class CommonUtils {
   static void printAndRecordLog(dynamic error, String stackTrace) {
     // Log to console
     log(error.toString());
     log(stackTrace);
+    
     {{#use_firebase}}
     // Record non-fatal error to Crashlytics
     FirebaseCrashlytics.instance.recordError(
@@ -17,6 +17,11 @@ class CommonUtils {
       printDetails: false,
     );
     {{/use_firebase}}
+
+    {{#use_sentry}}
+    // Record error to Sentry
+    Sentry.captureException(error, stackTrace: stackTrace);
+    {{/use_sentry}}
   }
 
   static Map<String, dynamic> decodeTokenAsJson(String code) {

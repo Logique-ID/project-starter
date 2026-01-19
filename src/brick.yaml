@@ -48,3 +48,8 @@ vars:
     description: Implement Dio with Alice debugging inspector
     default: true
     prompt: Implement Dio?
+  use_sentry:
+    type: boolean
+    description: Implement Sentry error tracking
+    default: true
+    prompt: Implement Sentry error tracking?

@@ -13,6 +13,16 @@ Future<void> run(HookContext context) async {
     context.vars['firebase_project_id'] = firebaseProjectId;
   }
 
+  final useSentry = context.vars['use_sentry'] as bool? ?? false;
+  if (useSentry) {
+    // Prompt for Sentry DSN
+    final sentryDsn = context.logger.prompt(
+      'Enter your Sentry DSN:',
+      defaultValue: '',
+    );
+    context.vars['sentry_dsn'] = sentryDsn;
+  }
+
   // Check if custom_icon is true
   final customIcon = context.vars['custom_icon'] as bool? ?? false;
   if (customIcon) {

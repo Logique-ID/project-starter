@@ -37,4 +37,8 @@ class F {
         return 'API_KEY_PROD';
     }
   }
+  {{#use_sentry}}
+  /// Sentry DSN for error tracking
+  static String get sentryDsn => '{{{sentry_dsn}}}';
+  {{/use_sentry}}
 }

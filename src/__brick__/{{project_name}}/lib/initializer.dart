@@ -1,4 +1,4 @@
-{{#use_firebase}}import 'package:firebase_core/firebase_core.dart';import 'package:firebase_crashlytics/firebase_crashlytics.dart';import 'package:firebase_messaging/firebase_messaging.dart';import 'package:flutter/foundation.dart';{{/use_firebase}}
+{{#use_firebase}}import 'package:firebase_core/firebase_core.dart';{{^use_sentry}}import 'package:firebase_crashlytics/firebase_crashlytics.dart';{{/use_sentry}}import 'package:firebase_messaging/firebase_messaging.dart';import 'package:flutter/foundation.dart';{{/use_firebase}}
 import 'package:flutter/material.dart';
 {{#use_splash}}import 'package:flutter_native_splash/flutter_native_splash.dart';{{/use_splash}}
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +37,9 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
 
   // Initialize Crashlytics
   FlutterError.onError = (errorDetails) {
-    {{#use_firebase}}
+    {{^use_sentry}}{{#use_firebase}}
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    {{/use_firebase}}
+    {{/use_firebase}}{{/use_sentry}}
     
     {{#use_sentry}}
     Sentry.captureException(
@@ -51,9 +51,9 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
 
   // Pass all uncaught asynchronous errors to Crashlytics
   PlatformDispatcher.instance.onError = (error, stack) {
-    {{#use_firebase}}
+    {{^use_sentry}}{{#use_firebase}}
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    {{/use_firebase}}
+    {{/use_firebase}}{{/use_sentry}}
     
     {{#use_sentry}}
     Sentry.captureException(error, stackTrace: stack);
@@ -61,11 +61,11 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
     return true;
   };
 
-  {{#use_firebase}}
+  {{#use_firebase}}{{^use_sentry}}
   // Enable Crashlytics collection only in non-debug builds
   await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
     kReleaseMode,
-  );
+  );{{/use_sentry}}
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   {{/use_firebase}}
 

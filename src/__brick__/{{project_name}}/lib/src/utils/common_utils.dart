@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
-{{#use_firebase}}import 'package:firebase_crashlytics/firebase_crashlytics.dart';{{/use_firebase}}
+{{^use_sentry}}{{#use_firebase}}import 'package:firebase_crashlytics/firebase_crashlytics.dart';{{/use_firebase}}{{/use_sentry}}
 {{#use_sentry}}import 'package:sentry_flutter/sentry_flutter.dart';{{/use_sentry}}
 
 class CommonUtils {
@@ -9,14 +9,14 @@ class CommonUtils {
     log(error.toString());
     log(stackTrace);
     
-    {{#use_firebase}}
+    {{^use_sentry}}{{#use_firebase}}
     // Record non-fatal error to Crashlytics
     FirebaseCrashlytics.instance.recordError(
       error,
       StackTrace.fromString(stackTrace),
       printDetails: false,
     );
-    {{/use_firebase}}
+    {{/use_firebase}}{{/use_sentry}}
 
     {{#use_sentry}}
     // Record error to Sentry

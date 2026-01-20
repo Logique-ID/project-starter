@@ -50,6 +50,6 @@ vars:
     prompt: Implement Dio?
   use_sentry:
     type: boolean
-    description: Implement Sentry error tracking
-    default: true
-    prompt: Implement Sentry error tracking?
+    description: Replace Firebase Crashlytics with Sentry
+    default: false
+    prompt: Replace Firebase Crashlytics with Sentry?

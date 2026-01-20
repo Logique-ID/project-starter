@@ -263,8 +263,8 @@
 				949BAAAFDE508B18E074FDF9 /* [CP] Embed Pods Frameworks */,
 				E3753C58D4F06219BD06EB88 /* [CP] Copy Pods Resources */,
 				{{#use_firebase}}
-				4B15A58325B9C0307734A794 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				E9C95376184C952671955D63 /* FlutterFire: "flutterfire bundle-service-file" */,
+				4B15A58325B9C0307734A794 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				{{/use_firebase}}
 			);
 			buildRules = (

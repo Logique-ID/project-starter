@@ -17,23 +17,21 @@ Future<void> run(HookContext context) async {
     final useFirebase = context.vars['use_firebase'] as bool? ?? false;
     if (useFirebase) {
       /// Run flutterfire config
-      await Future.wait([
-        HookHelper.runCommand(
-          context,
-          command: 'sh',
-          arguments: ['flutterfire-config.sh', 'dev'],
-        ),
-        HookHelper.runCommand(
-          context,
-          command: 'sh',
-          arguments: ['flutterfire-config.sh', 'stg'],
-        ),
-        HookHelper.runCommand(
-          context,
-          command: 'sh',
-          arguments: ['flutterfire-config.sh', 'prod'],
-        ),
-      ]);
+      await HookHelper.runCommand(
+        context,
+        command: 'sh',
+        arguments: ['flutterfire-config.sh', 'dev'],
+      );
+      await HookHelper.runCommand(
+        context,
+        command: 'sh',
+        arguments: ['flutterfire-config.sh', 'stg'],
+      );
+      await HookHelper.runCommand(
+        context,
+        command: 'sh',
+        arguments: ['flutterfire-config.sh', 'prod'],
+      );
     }
   }
 

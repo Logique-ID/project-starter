@@ -1,7 +1,7 @@
 # Mason
 .mason
 mason-lock.json
-config.json
+config/
 
 # Images
 image.png

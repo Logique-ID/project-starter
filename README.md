@@ -12,6 +12,8 @@ This repository contains a [Mason](https://github.com/felangel/mason) brick that
 - **Local Database**: Sembast with encryption support
 - **HTTP Client**: Dio with Alice debugging inspector (optional)
 - **Firebase**: Core, Messaging, and FlutterFire CLI integration (optional)
+- **Monitoring**: Sentry error tracking (optional, replaces Firebase Crashlytics)
+- **Analytics**: Mixpanel analytics (optional, replaces Firebase Analytics)
 - **Responsive Design**: Flutter ScreenUtil
 - **Localization**: English and Indonesian (extensible, optional)
 - **Form Handling**: Flutter Form Builder with validators
@@ -67,7 +69,8 @@ The brick supports several optional features that can be enabled or disabled:
 - **Firebase** (`use_firebase`): When enabled, includes Firebase Core, Messaging, and auto-configures FlutterFire CLI for all flavors. When disabled, Firebase dependencies and initialization code are excluded.
 - **Localization** (`use_localization`): When enabled, includes ARB-based localization with English and Indonesian support. When disabled, provides a `StringHardcoded` extension for hardcoded strings.
 - **Dio HTTP Client** (`use_dio`): When enabled, includes Dio with Alice debugging inspector for HTTP requests. When disabled, provides TODO comments suggesting alternative HTTP client implementations.
-- **Splash Screen** (`use_splash`): When enabled, generates native splash screen configuration. When disabled, splash screen dependencies and initialization are excluded.
+- **Sentry** (`use_sentry`): When enabled, includes Sentry for error tracking and performance monitoring, replacing Firebase Crashlytics.
+- **Mixpanel** (`use_mixpanel`): When enabled, includes Mixpanel for analytics, replacing Firebase Analytics.
 
 All optional features default to `true` for a complete setup, but can be disabled to create a minimal project structure.
 
@@ -85,7 +88,8 @@ The generator will ask for the following information:
 | `use_firebase` | Enable Firebase integration | `true` |
 | `use_localization` | Enable localization support | `true` |
 | `use_dio` | Enable Dio HTTP client with Alice debugging | `true` |
-| `firebase_project_id` | Your Firebase project ID | (required if `use_firebase` is `true`) |
+| `use_sentry` | Enable Sentry error tracking | `false` |
+| `use_mixpanel` | Enable Mixpanel analytics | `false` |
 
 If you select custom options:
 - **Custom Icon**: You'll be prompted for the path to your icon file (1024x1024 PNG recommended)
@@ -105,7 +109,8 @@ mason make starter \
   --use_firebase true \
   --use_localization true \
   --use_dio true \
-  --firebase_project_id your-firebase-project-id
+  --use_sentry false \
+  --use_mixpanel false
 ```
 
 ## Generated Project Structure
@@ -138,6 +143,13 @@ your_project_name/
 │   │   ├── core/             # Core mixins and utilities
 │   │   ├── feature/          # Feature modules (authentication, home, etc.)
 │   │   ├── localization/     # L10n configuration and ARB files (if use_localization)
+│   │   ├── monitoring/       # Analytics facade and clients (if use_sentry or use_mixpanel)
+│   │   │   ├── analytics_facade.dart
+│   │   │   ├── analytics_client.dart
+│   │   │   ├── firebase_analytics_client.dart (if use_firebase and !use_mixpanel)
+│   │   │   ├── mixpanel_analytics_client.dart (if use_mixpanel)
+│   │   │   ├── logger_analytics_client.dart
+│   │   │   └── logger_navigator_observer.dart
 │   │   ├── routing/          # GoRouter configuration
 │   │   ├── service/          # Firebase and notification services (if use_firebase)
 │   │   ├── theme/            # App theming
@@ -167,6 +179,17 @@ your_project_name/
 
 ```
 project-starter/
+├── ref/
+│   └── project-starter-ref/  # Reference Flutter project (Git submodule)
+├── scripts/                  # Development and sync scripts
+│   ├── sync-template.dart    # Sync reference → template
+│   ├── sync-template_config.dart
+│   ├── sync-template_impact.dart
+│   ├── sync-template_interactive.dart
+│   ├── sync-template_mapper.dart
+│   ├── sync-template_merger.dart
+│   ├── sync-template_parser.dart
+│   └── sync-template_colors.dart
 ├── src/
 │   ├── __brick__/            # Template files (with Mustache variables)
 │   │   └── {{project_name}}/

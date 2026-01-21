@@ -1,3 +1,31 @@
+# 0.1.5
+
+## Changes
+
+### Improvements
+- **Sentry Integration**: Added `use_sentry` template variable (default: `false`) to replace Firebase Crashlytics
+  - Added `sentry_flutter` dependency conditionally in `pubspec.yaml`
+  - Added Sentry initialization in `initializer.dart` when enabled
+  - Updated Android `build.gradle.kts` to conditionally include Sentry configuration
+  - Provides centralized error tracking with performance monitoring
+
+- **Mixpanel Integration**: Added `use_mixpanel` template variable (default: `false`) to replace Firebase Analytics
+  - Added `mixpanel` and `uuid` dependencies conditionally in `pubspec.yaml`
+  - Added monitoring directory with conditional analytics clients:
+    - `analytics_facade.dart` - Central analytics interface
+    - `analytics_client.dart` - Base client interface
+    - `firebase_analytics_client.dart` (conditional on `use_firebase` and `!use_mixpanel`)
+    - `mixpanel_analytics_client.dart` (conditional on `use_mixpanel`)
+    - `logger_analytics_client.dart` - Fallback/development logger
+    - `logger_navigator_observer.dart` - Navigation logging
+  - Updated `flutterfire-config.sh` for Firebase Analytics plist configuration
+
+- **Project Infrastructure Updates**:
+  - Added `.cursor/rules/derived-cursor-rules.mdc` for SpecStory/Cursor integration
+  - Added `scripts/` directory with sync-template tools for reference-to-template synchronization
+  - Added `ref/project-starter-ref` as Git submodule for reference Flutter project
+  - Removed `pubspec.lock` from template to avoid dependency conflicts
+
 # 0.1.4
 
 ## Changes
@@ -130,6 +158,8 @@ Initial release of the Flutter Starter Brick.
 | `use_firebase` | Implement Firebase | `true` |
 | `use_localization` | Implement localization | `true` |
 | `use_dio` | Implement Dio with Alice debugging inspector | `true` |
+| `use_sentry` | Implement Sentry (replaces Firebase Crashlytics) | `false` |
+| `use_mixpanel` | Implement Mixpanel (replaces Firebase Analytics) | `false` |
 
 ### Included Feature Modules
 - Authentication (auth repository with app user model)

@@ -4,9 +4,9 @@
     "app_id": "com.yama.todo",
     "custom_icon": false,
     "use_splash": true,
-    "use_firebase": false,
+    "use_firebase": true,
     "use_localization": true,
     "use_dio": true,
     "use_sentry": false,
-    "use_mixpanel": true
+    "use_mixpanel": false
 }

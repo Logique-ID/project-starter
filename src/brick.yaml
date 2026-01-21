@@ -55,6 +55,6 @@ vars:
     prompt: Implement Sentry (Will replace Firebase Crashlytics if enabled)?
   use_mixpanel:
     type: boolean
-    description: Implement Mixpanel
-    default: true
-    prompt: Implement Mixpanel?
+    description: Implement Mixpanel (Will replace Firebase Analytics if enabled)
+    default: false
+    prompt: Implement Mixpanel (Will replace Firebase Analytics if enabled)?

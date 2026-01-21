@@ -37,7 +37,7 @@ dependencies:
   firebase_core: 4.2.1
   firebase_messaging: ^16.0.4
   {{^use_sentry}}firebase_crashlytics: ^5.0.5{{/use_sentry}}
-  firebase_analytics: ^12.0.4
+  {{^use_mixpanel}}firebase_analytics: ^12.0.4{{/use_mixpanel}}
   {{/use_firebase}}
   # screenutil & internet connection checker
   flutter_screenutil: 5.9.3

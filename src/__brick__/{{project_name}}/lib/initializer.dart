@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 {{#use_sentry}}import 'package:sentry_flutter/sentry_flutter.dart';import 'flavor.dart';{{/use_sentry}}
 import 'src/routing/app_startup.dart';
-{{#use_firebase}}import 'src/service/firebase/analytics/firebase_analytics_client.dart';
+{{#use_firebase}}{{^use_mixpanel}}import 'src/service/firebase/analytics/firebase_analytics_client.dart';{{/use_mixpanel}}
 import 'src/service/firebase/firebase_service.dart';{{/use_firebase}}
 {{#use_mixpanel}}import 'src/service/mixpanel/mixpanel_analytics_client.dart';{{/use_mixpanel}}
 
@@ -46,9 +46,11 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
   );
   {{/use_sentry}}
 
+  {{^use_mixpanel}}
   // Initialize Firebase Analytics - explicitly enable
   final analytics = container.read(firebaseAnalyticsClientProvider);
   await analytics.setAnalyticsCollectionEnabled(true);
+  {{/use_mixpanel}}
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   {{/use_firebase}}

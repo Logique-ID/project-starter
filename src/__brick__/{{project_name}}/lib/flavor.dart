@@ -41,4 +41,17 @@ class F {
   /// Sentry DSN for error tracking
   static String get sentryDsn => '{{{sentry_dsn}}}';
   {{/use_sentry}}
+  {{#use_mixpanel}}
+  /// Mixpanel token is used to track user events and behaviors in Mixpanel.
+  static String get mixpanelToken {
+    switch (appFlavor) {
+      case Flavor.dev:
+        return '{{{mixpanel_token}}}';
+      case Flavor.stg:
+        return '{{{mixpanel_token}}}';
+      default:
+        return '{{{mixpanel_token}}}';
+    }
+  }
+  {{/use_mixpanel}}
 }

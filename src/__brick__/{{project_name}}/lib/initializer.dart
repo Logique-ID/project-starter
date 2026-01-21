@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'src/routing/app_startup.dart';
 {{#use_firebase}}import 'src/service/firebase/analytics/firebase_analytics_client.dart';
 import 'src/service/firebase/firebase_service.dart';{{/use_firebase}}
+{{#use_mixpanel}}import 'src/service/mixpanel/mixpanel_analytics_client.dart';{{/use_mixpanel}}
 
 Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOptions}{{/use_firebase}}) async {
   final container = ProviderContainer();
@@ -81,6 +82,14 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
     return true;
   };
   {{/use_sentry}}
+
+  {{#use_mixpanel}}
+  // * Preload MixpanelAnalyticsClient, so we can make unawaited analytics calls
+  final mixpanelAnalytics = await container.read(
+    mixpanelAnalyticsClientProvider.future,
+  );
+  await mixpanelAnalytics.setAnalyticsCollectionEnabled(true);
+  {{/use_mixpanel}}
 
   runApp(
     UncontrolledProviderScope(

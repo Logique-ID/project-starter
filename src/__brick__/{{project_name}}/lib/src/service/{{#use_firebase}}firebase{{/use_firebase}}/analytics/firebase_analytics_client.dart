@@ -15,8 +15,8 @@ class FirebaseAnalyticsClient implements AnalyticsClient {
   }
 
   @override
-  Future<void> trackLogin() {
-    return _analytics.logEvent(name: 'user_login');
+  Future<void> trackLogin() async {
+    await _analytics.logEvent(name: 'user_login');
   }
 
   ///TODO: Add other event tracking methods here

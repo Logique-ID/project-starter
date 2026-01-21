@@ -1,10 +1,10 @@
-{{#use_firebase}}import 'dart:async';{{/use_firebase}}
+import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-{{#use_firebase}}import '../../../../monitoring/analytics_facade.dart';{{/use_firebase}}
+import '../../../../monitoring/analytics_facade.dart';
 import '../../../../utils/common_utils.dart';
 import 'login_controller.dart';
 
@@ -18,7 +18,7 @@ mixin class LoginEvent {
     FocusManager.instance.primaryFocus?.unfocus();
     if (formKey.currentState!.saveAndValidate()) {
       try {
-        {{#use_firebase}}unawaited(ref.read(analyticsFacadeProvider).trackLogin());{{/use_firebase}}
+        unawaited(ref.read(analyticsFacadeProvider).trackLogin());
         final values = formKey.currentState!.value;
 
         final String username = values[keyLoginUsername];

@@ -23,6 +23,16 @@ Future<void> run(HookContext context) async {
     context.vars['sentry_dsn'] = sentryDsn;
   }
 
+  final useMixpanel = context.vars['use_mixpanel'] as bool? ?? false;
+  if (useMixpanel) {
+    // Prompt for Mixpanel token
+    final mixpanelToken = context.logger.prompt(
+      'Enter your Mixpanel token:',
+      defaultValue: '',
+    );
+    context.vars['mixpanel_token'] = mixpanelToken;
+  }
+
   // Check if custom_icon is true
   final customIcon = context.vars['custom_icon'] as bool? ?? false;
   if (customIcon) {

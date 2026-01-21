@@ -53,3 +53,8 @@ vars:
     description: Replace Firebase Crashlytics with Sentry
     default: false
     prompt: Replace Firebase Crashlytics with Sentry?
+  use_mixpanel:
+    type: boolean
+    description: Implement Mixpanel
+    default: true
+    prompt: Implement Mixpanel?

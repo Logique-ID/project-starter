@@ -56,6 +56,10 @@ dependencies:
   # sentry
   sentry_flutter: ^9.9.2
   {{/use_sentry}}
+  {{#use_mixpanel}}
+  # mixpanel
+  mixpanel_flutter: ^2.3.0
+  {{/use_mixpanel}}
   flutter_local_notifications: ^19.5.0
   flutter_svg: ^2.2.2
   flutter_form_builder: ^10.2.0

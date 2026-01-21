@@ -42,6 +42,8 @@ class SyncConfig {
   /// Use exact names (case-sensitive), e.g., 'specific_file.dart' or 'folder_name/'
   static const List<String> whitelistIgnore = [
     /// general flutter
+    '.puro.json',
+    'pubspec.lock',
     '.git',
     '.specstory/',
     '.cursorindexingignore',

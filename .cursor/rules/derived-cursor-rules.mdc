@@ -15,6 +15,8 @@ The project is a Mason brick called `starter` that generates a production-ready 
 - Localization: EN + ID via ARB (optional)
 - UI infra: ScreenUtil-based responsive layout, theming, reusable widgets
 - Nice-to-haves: optional custom app icon, native splash, notifications
+- Monitoring: Sentry error tracking (optional, replaces Firebase Crashlytics)
+- Analytics: Mixpanel analytics (optional, replaces Firebase Analytics)
 
 The brick uses a reference Flutter app for development and testing and automates syncing between reference and template.
 
@@ -74,6 +76,17 @@ project-starter/
 - Android Kotlin package is created from `app_id` in post-gen hook
 - Some UI strings use `.hardcoded` extension (e.g., `'Silakan login'.hardcoded`) instead of localization
 - Several TODOs in router redirect logic and login screen
+- `@config.json` should be filled with Mason brick variable template. The `config.json` should contain the following variables with their default values:
+  - `project_name`: `"my_app"`
+  - `app_name`: `"My App"`
+  - `app_id`: `"com.example.myapp"`
+  - `custom_icon`: `false`
+  - `use_splash`: `true`
+  - `use_firebase`: `true`
+  - `use_localization`: `true`
+  - `use_dio`: `true`
+  - `use_sentry`: `false`
+  - `use_mixpanel`: `true`
 
 ## WORKFLOW & RELEASE RULES
 **Dual-Repository Approach**
@@ -141,7 +154,7 @@ make test
 **Sync Script Features**
 - `--dry-run` / `-n`: Preview changes without modifying files
 - `--verbose` / `-v`: Detailed output for each file
-- `--show-impact` / `-v`: Preview which files will be affected
+- `--show_impact` / `-v`: Preview which files will be affected
 - `--interactive` / `-i`: Choose which files to sync
 - `--path <path>`: Sync specific directory only
 
@@ -580,8 +593,99 @@ make test
 ## DEBUGGING
 - Use the Alice HTTP debugging inspector for Dio.
 - Test template generation after each change.
+- **URL Encoding Issue**: When using variables that contain special characters like URLs (e.g., Sentry DSN), Mason might HTML-encode them. To prevent this, use the raw variable syntax `{{{variable}}}` in the template. For example, change `static String get sentryDsn => '{{sentry_dsn}}';` to `static String get sentryDsn => '{{{sentry_dsn}}}';` in `src/__brick__/{{project_name}}/lib/flavor.dart`. This applies to other URL values or any variable containing characters like `&`, `<`, `>`, `"`, or `'`.
 
 ## FINAL DOs AND DON'Ts
 - Don't use multi branch or repository for the reference project, just use the existing one.
 - Don't edit the plan file directly, use the tool.
 - Trust code over README.
+
+## USAGE
+
+This is a **Mason brick** for scaffolding Flutter projects. Here's how to use it:
+
+### 1. Install Prerequisites
+
+```bash
+# Flutter SDK (>= 3.38.0)
+flutter --version
+
+# Mason CLI
+dart pub global activate mason_cli
+
+# FlutterFire CLI (if using Firebase)
+dart pub global activate flutterfire_cli
+
+# Firebase CLI (if using Firebase)
+npm install -g firebase-tools
+firebase login
+```
+
+### 2. Add the Brick
+
+```bash
+# Add from Git
+mason add starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
+```
+
+### 3. Generate a New Project
+
+```bash
+# Interactive mode
+mason make starter
+
+# Non-interactive mode with variables
+mason make starter \
+  --project_name todo_yama \
+  --app_name "TodoY" \
+  --app_id com.yama.todo \
+  --use_firebase false \
+  --use_localization true \
+  --use_dio true
+  --use_sentry false \
+  --use_mixpanel false
+```
+
+### 4. Post-Generation Steps
+
+```bash
+cd your_project_name
+
+# Get dependencies
+flutter pub get
+
+# Generate code (Riverpod, etc.)
+dart run build_runner build --delete-conflicting-outputs
+
+# Run with flavor
+flutter run --flavor dev -t lib/main_dev.dart
+flutter run --flavor stg -t lib/main_stg.dart
+flutter run --flavor prod -t lib/main_prod.dart
+```
+
+## Available Variables
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `project_name` | string | `my_app` | Project name (snake_case) |
+| `app_name` | string | `My App` | Display name on device |
+| `app_id` | string | `com.example.myapp` | Bundle ID |
+| `custom_icon` | boolean | `false` | Use custom app icon |
+| `use_splash` | boolean | `true` | Native splash screen |
+| `use_firebase` | boolean | `true` | Firebase integration |
+| `use_localization` | boolean | `true` | Localization support |
+| `use_dio` | boolean | `true` | Dio HTTP client |
+| `use_sentry` | boolean | `false` | Use Sentry instead of Crashlytics |
+| `use_mixpanel` | boolean | `true` | Mixpanel analytics |
+
+## Testing the Brick Locally
+
+From the project root:
+
+```bash
+mason make starter --output-dir ./test_output
+```
+
+## Git Configuration
+
+- Ensure `@config.json` is included in `.gitignore` to prevent unintentional tracking of local configuration changes.

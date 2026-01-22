@@ -1,3 +1,18 @@
+# 0.1.6
+
+## Changes
+
+### Bug Fixes
+- **Enhanced Pre-Generation Prompts**: Improved user prompts for Firebase, Sentry, Mixpanel, and custom app icon paths to only request input when the corresponding feature is enabled
+- **Improved Error Handling**: Enhanced error handling and user prompts in Firebase configuration script and hook helper methods
+  - Better error messages for missing or invalid configuration
+  - Improved fallback behavior when commands fail
+  - Enhanced validation for user inputs
+
+### Improvements
+- **Pre-Generation Hook Refactoring**: Streamlined pre-generation logic to conditionally prompt only for enabled features
+- **Helper Methods Enhancement**: Added comprehensive error handling and retry logic in hook helper methods
+
 # 0.1.5
 
 ## Changes

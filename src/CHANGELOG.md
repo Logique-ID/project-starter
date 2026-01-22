@@ -1,3 +1,15 @@
+# 0.1.7
+
+## Changes
+
+### Features
+- **Symbol Validation for App ID**: Added validation to ensure app_id contains valid Kotlin package symbols (no dashes, special characters, or reserved words)
+- **Enhanced User Prompts**: Improved input validation and error messages in hook helper methods for app_id and other configuration values
+
+### Improvements
+- **Pre-Generation Hook Enhancement**: Added symbol validation and sanitization for app_id input
+- **Helper Methods Enhancement**: Improved validation logic with specific error messages for invalid characters
+
 # 0.1.6
 
 ## Changes

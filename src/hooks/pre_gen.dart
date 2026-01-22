@@ -5,6 +5,19 @@ import 'helper.dart';
 Future<void> run(HookContext context) async {
   final progress = context.logger.progress('Prepare project');
 
+  final appId = context.vars['app_id'] as String?;
+  if (appId != null && appId.isNotEmpty) {
+    HookHelper.validateRetriable(
+      context,
+      key: 'app_id',
+      promptMessage: 'Enter your app bundle ID:',
+      errorMessage:
+          'App ID cannot be empty and must contain only alphanumeric characters and dots',
+      infoMessage: 'Please enter a valid app bundle ID to continue',
+      validateSymbols: true,
+    );
+  }
+
   final useFirebase = context.vars['use_firebase'] as bool? ?? false;
   if (useFirebase) {
     HookHelper.validateRetriable(
@@ -12,8 +25,8 @@ Future<void> run(HookContext context) async {
       key: 'firebase_project_id',
       promptMessage: 'Enter your Firebase project ID:',
       errorMessage:
-          'Firebase Project ID cannot be empty when Firebase is enabled.',
-      infoMessage: 'Please enter a valid Firebase Project ID to continue.',
+          'Firebase Project ID cannot be empty when Firebase is enabled',
+      infoMessage: 'Please enter a valid Firebase Project ID to continue',
     );
   }
 
@@ -23,8 +36,8 @@ Future<void> run(HookContext context) async {
       context,
       key: 'sentry_dsn',
       promptMessage: 'Enter your Sentry DSN:',
-      errorMessage: 'Sentry DSN cannot be empty when Sentry is enabled.',
-      infoMessage: 'Please enter a valid Sentry DSN to continue.',
+      errorMessage: 'Sentry DSN cannot be empty when Sentry is enabled',
+      infoMessage: 'Please enter a valid Sentry DSN to continue',
     );
   }
 
@@ -34,8 +47,8 @@ Future<void> run(HookContext context) async {
       context,
       key: 'mixpanel_token',
       promptMessage: 'Enter your Mixpanel token:',
-      errorMessage: 'Mixpanel token cannot be empty when Mixpanel is enabled.',
-      infoMessage: 'Please enter a valid Mixpanel token to continue.',
+      errorMessage: 'Mixpanel token cannot be empty when Mixpanel is enabled',
+      infoMessage: 'Please enter a valid Mixpanel token to continue',
     );
   }
 

@@ -118,26 +118,47 @@ class HookHelper {
     required String promptMessage,
     required String errorMessage,
     required String infoMessage,
+    bool validateSymbols = false,
   }) {
     String? value = context.vars[key] as String?;
     // Prompt with retry logic
     const maxAttempts = 2;
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      // Validate symbols if enabled
+      if (validateSymbols) {
+        final isEmpty = value?.isEmpty ?? true;
+        // Check if value contains invalid symbols
+        if (_hasInvalidSymbols(value ?? '') || isEmpty) {
+          if (attempt < maxAttempts) {
+            _showError(context, message: errorMessage);
+            _showInfo(context, message: infoMessage);
+          } else {
+            throw MasonException(
+              'Invalid symbols detected. Generation cancelled.',
+            );
+          }
+        } else {
+          context.vars[key] = value;
+          return;
+        }
+      }
+
       value = _promptValue(
         context,
         key: key,
         promptMessage: promptMessage,
         defaultValue: '',
+        validateSymbols: validateSymbols,
       );
 
       // If value is not empty, return
-      if (value.trim().isNotEmpty) {
+      if (value.trim().isNotEmpty && !validateSymbols) {
         context.vars[key] = value;
         return;
       }
 
       // Show error on first failed attempt
-      if (attempt < maxAttempts) {
+      if (attempt < maxAttempts && !validateSymbols) {
         _showError(context, message: errorMessage);
         _showInfo(context, message: infoMessage);
       }
@@ -214,14 +235,21 @@ String _promptValue(
   required String key,
   required String promptMessage,
   String defaultValue = '',
+  bool validateSymbols = false,
 }) {
   String? value = context.vars[key] as String?;
-  if (value == null || value.isEmpty) {
+  if (value == null || value.isEmpty || validateSymbols) {
     value = context.logger.prompt(
       promptMessage,
       defaultValue: defaultValue,
     );
-    context.vars[key] = value;
   }
   return value;
+}
+
+/// Checks if the value contains any symbol except dot (.)
+/// Returns true if invalid symbols are detected
+bool _hasInvalidSymbols(String value) {
+  // Allow alphanumeric characters and dots only
+  return RegExp(r'[^a-zA-Z0-9.]').hasMatch(value);
 }

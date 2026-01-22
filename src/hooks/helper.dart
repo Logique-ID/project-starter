@@ -13,18 +13,25 @@ class HookHelper {
     final directory = "${Directory.current.path}/$projectName";
 
     /// Run a command in the generated directory
-    final process = context.logger.progress('Running $command $arguments');
+    final process = _showProgress(
+      context,
+      message: 'Running $command $arguments',
+    );
+    final failureMessage = 'Failed to execute $command ${arguments.join(' ')}';
+
     final result = await Process.run(
       command,
       arguments,
       workingDirectory: directory,
     );
 
+    /// Throw an exception if the command failed
     if (result.exitCode == 0) {
       process.complete('Successfully executed $command ${arguments.join(' ')}');
     } else {
-      process.fail('Failed to execute $command ${arguments.join(' ')}');
-      context.logger.err('Error: ${result.stderr}');
+      process.fail(failureMessage);
+      await _rollback(context);
+      throw MasonException(result.stderr.toString());
     }
   }
 
@@ -38,7 +45,7 @@ class HookHelper {
     final sourceFile = File(sourcePath);
 
     if (!await sourceFile.exists()) {
-      context.logger.err('Source file not found at: $sourcePath');
+      _showError(context, message: 'Source file not found at: $sourcePath');
       return;
     }
 
@@ -50,28 +57,19 @@ class HookHelper {
     final targetFile = await _findFile(projectDir, originalFileName);
 
     if (targetFile == null) {
-      context.logger.err(
-        'Target file "$originalFileName" not found in generated project',
-      );
+      _showError(context,
+          message:
+              'Target file "$originalFileName" not found in generated project');
       return;
     }
 
     try {
       await sourceFile.copy(targetFile.path);
-      context.logger.success('Applied $originalFileName from: $sourcePath');
+      _showSuccess(context,
+          message: 'Applied $originalFileName from: $sourcePath');
     } catch (e) {
-      context.logger.err('Failed to copy $originalFileName: $e');
+      _showError(context, message: 'Failed to copy $originalFileName: $e');
     }
-  }
-
-  /// Recursively searches for a file by name in the given directory.
-  static Future<File?> _findFile(Directory dir, String fileName) async {
-    await for (final entity in dir.list(recursive: true)) {
-      if (entity is File && path.basename(entity.path) == fileName) {
-        return entity;
-      }
-    }
-    return null;
   }
 
   /// Creates directory structure from app_id (e.g., com.dash.app → com/dash/app)
@@ -107,7 +105,123 @@ class HookHelper {
         await templatesDir.delete();
       }
 
-      context.logger.success('Created $templateFileName at $packagePath');
+      _showSuccess(
+        context,
+        message: 'Created $templateFileName at $packagePath',
+      );
     }
   }
+
+  static void validateRetriable(
+    HookContext context, {
+    required String key,
+    required String promptMessage,
+    required String errorMessage,
+    required String infoMessage,
+  }) {
+    String? value = context.vars[key] as String?;
+    // Prompt with retry logic
+    const maxAttempts = 2;
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      value = _promptValue(
+        context,
+        key: key,
+        promptMessage: promptMessage,
+        defaultValue: '',
+      );
+
+      // If value is not empty, return
+      if (value.trim().isNotEmpty) {
+        context.vars[key] = value;
+        return;
+      }
+
+      // Show error on first failed attempt
+      if (attempt < maxAttempts) {
+        _showError(context, message: errorMessage);
+        _showInfo(context, message: infoMessage);
+      }
+    }
+
+    // Final validation - throw if still empty after all attempts
+    throw MasonException(
+      '$errorMessage. Generation cancelled.',
+    );
+  }
+}
+
+Future<void> _rollback(HookContext context) async {
+  final projectName = context.vars['project_name'] as String;
+  final directory = "${Directory.current.path}/$projectName";
+
+  /// Run a command in the generated directory
+  final process = _showProgress(
+    context,
+    message: 'Rolling back project',
+  );
+
+  final result = await Process.run(
+    'rm',
+    ['-rf', directory],
+    workingDirectory: directory,
+  );
+
+  if (result.exitCode == 0) {
+    process.complete('Successfully rolled back project');
+  } else {
+    final failureMessage = 'Failed to roll back project';
+    process.fail(failureMessage);
+    throw MasonException('$failureMessage: ${result.stderr}');
+  }
+}
+
+/// Recursively searches for a file by name in the given directory.
+Future<File?> _findFile(Directory dir, String fileName) async {
+  await for (final entity in dir.list(recursive: true)) {
+    if (entity is File && path.basename(entity.path) == fileName) {
+      return entity;
+    }
+  }
+  return null;
+}
+
+Progress _showProgress(
+  HookContext context, {
+  required String message,
+}) =>
+    context.logger.progress(message);
+
+void _showInfo(
+  HookContext context, {
+  required String message,
+}) =>
+    context.logger.info(message);
+
+void _showSuccess(
+  HookContext context, {
+  required String message,
+}) =>
+    context.logger.success(message);
+
+void _showError(
+  HookContext context, {
+  required String message,
+}) =>
+    context.logger.err(message);
+
+String _promptValue(
+  HookContext context, {
+  required String key,
+  required String promptMessage,
+  String defaultValue = '',
+}) {
+  String? value = context.vars[key] as String?;
+  if (value == null || value.isEmpty) {
+    value = context.logger.prompt(
+      promptMessage,
+      defaultValue: defaultValue,
+    );
+    context.vars[key] = value;
+  }
+  return value;
 }

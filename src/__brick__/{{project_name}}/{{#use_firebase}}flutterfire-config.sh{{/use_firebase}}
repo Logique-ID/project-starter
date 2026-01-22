@@ -2,16 +2,28 @@
 # Script to generate Firebase configuration files for different environments/flavors
 # Feel free to reuse and adapt this script for your own projects
 
+# Exit on error
+set -e
+
 # Function to enable analytics in plist
 enable_analytics() {
   local plist_file="$1"
   # Use plutil (macOS) or /usr/libexec/PlistBuddy to modify plist
   if command -v /usr/libexec/PlistBuddy &> /dev/null; then
     # macOS
-    /usr/libexec/PlistBuddy -c "Set :IS_ANALYTICS_ENABLED true" "$plist_file"
+    if ! /usr/libexec/PlistBuddy -c "Set :IS_ANALYTICS_ENABLED true" "$plist_file"; then
+      echo "Error: Failed to enable analytics in $plist_file"
+      exit 1
+    fi
   elif command -v sed &> /dev/null; then
     # Linux/other - use sed to replace the value
-    sed -i '' 's|<key>IS_ANALYTICS_ENABLED</key>\s*<false/>|<key>IS_ANALYTICS_ENABLED</key><true/>|g' "$plist_file"
+    if ! sed -i '' 's|<key>IS_ANALYTICS_ENABLED</key>\s*<false/>|<key>IS_ANALYTICS_ENABLED</key><true/>|g' "$plist_file"; then
+      echo "Error: Failed to enable analytics in $plist_file"
+      exit 1
+    fi
+  else
+    echo "Error: No suitable tool found to modify plist file"
+    exit 1
   fi
   echo "Enabled analytics in $plist_file"
 }
@@ -23,7 +35,7 @@ fi
 
 case $1 in
   dev)
-    flutterfire config \
+    if ! flutterfire config \
       --project={{firebase_project_id}} \
       --out=lib/firebase_options/firebase_options_dev.dart \
       --ios-bundle-id={{app_id}}.dev \
@@ -32,11 +44,14 @@ case $1 in
       --android-package-name={{app_id}}.dev \
       --android-out=android/app/src/dev/google-services.json \
       --platforms=android,ios \
-      --yes
+      --yes; then
+      echo "Error: Failed to configure Firebase for dev environment"
+      exit 1
+    fi
     enable_analytics "ios/flavors/dev/GoogleService-Info.plist"
     ;;
   stg)
-    flutterfire config \
+    if ! flutterfire config \
       --project={{firebase_project_id}} \
       --out=lib/firebase_options/firebase_options_stg.dart \
       --ios-bundle-id={{app_id}}.stg \
@@ -45,11 +60,14 @@ case $1 in
       --android-package-name={{app_id}}.stg \
       --android-out=android/app/src/stg/google-services.json \
       --platforms=android,ios \
-      --yes
+      --yes; then
+      echo "Error: Failed to configure Firebase for stg environment"
+      exit 1
+    fi
     enable_analytics "ios/flavors/stg/GoogleService-Info.plist"
     ;;
   prod)
-    flutterfire config \
+    if ! flutterfire config \
       --project={{firebase_project_id}} \
       --out=lib/firebase_options/firebase_options_prod.dart \
       --ios-bundle-id={{app_id}} \
@@ -58,7 +76,10 @@ case $1 in
       --android-package-name={{app_id}} \
       --android-out=android/app/src/prod/google-services.json \
       --platforms=android,ios \
-      --yes
+      --yes; then
+      echo "Error: Failed to configure Firebase for prod environment"
+      exit 1
+    fi
     enable_analytics "ios/flavors/prod/GoogleService-Info.plist"
     ;;
   *)

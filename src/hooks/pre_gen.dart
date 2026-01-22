@@ -1,48 +1,42 @@
 import 'package:mason/mason.dart';
 
+import 'helper.dart';
+
 Future<void> run(HookContext context) async {
   final progress = context.logger.progress('Prepare project');
 
   final useFirebase = context.vars['use_firebase'] as bool? ?? false;
   if (useFirebase) {
-    String? firebaseProjectId = context.vars['firebase_project_id'] as String?;
-    // Prompt for Firebase project ID
-    if (firebaseProjectId == null || firebaseProjectId.isEmpty) {
-      // Only prompt if not already provided
-      firebaseProjectId = context.logger.prompt(
-        'Enter your Firebase project ID:',
-        defaultValue: '',
-      );
-    }
-    context.vars['firebase_project_id'] = firebaseProjectId;
+    HookHelper.validateRetriable(
+      context,
+      key: 'firebase_project_id',
+      promptMessage: 'Enter your Firebase project ID:',
+      errorMessage:
+          'Firebase Project ID cannot be empty when Firebase is enabled.',
+      infoMessage: 'Please enter a valid Firebase Project ID to continue.',
+    );
   }
 
   final useSentry = context.vars['use_sentry'] as bool? ?? false;
   if (useSentry) {
-    String? sentryDsn = context.vars['sentry_dsn'] as String?;
-    // Prompt for Sentry DSN
-    if (sentryDsn == null || sentryDsn.isEmpty) {
-      // Only prompt if not already provided
-      sentryDsn = context.logger.prompt(
-        'Enter your Sentry DSN:',
-        defaultValue: '',
-      );
-    }
-    context.vars['sentry_dsn'] = sentryDsn;
+    HookHelper.validateRetriable(
+      context,
+      key: 'sentry_dsn',
+      promptMessage: 'Enter your Sentry DSN:',
+      errorMessage: 'Sentry DSN cannot be empty when Sentry is enabled.',
+      infoMessage: 'Please enter a valid Sentry DSN to continue.',
+    );
   }
 
   final useMixpanel = context.vars['use_mixpanel'] as bool? ?? false;
   if (useMixpanel) {
-    String? mixpanelToken = context.vars['mixpanel_token'] as String?;
-    // Prompt for Mixpanel token
-    if (mixpanelToken == null || mixpanelToken.isEmpty) {
-      // Only prompt if not already provided
-      mixpanelToken = context.logger.prompt(
-        'Enter your Mixpanel token:',
-        defaultValue: '',
-      );
-    }
-    context.vars['mixpanel_token'] = mixpanelToken;
+    HookHelper.validateRetriable(
+      context,
+      key: 'mixpanel_token',
+      promptMessage: 'Enter your Mixpanel token:',
+      errorMessage: 'Mixpanel token cannot be empty when Mixpanel is enabled.',
+      infoMessage: 'Please enter a valid Mixpanel token to continue.',
+    );
   }
 
   // Check if custom_icon is true

@@ -44,12 +44,91 @@ Before using this brick, ensure you have:
    firebase login
    ```
 
-## Installation
+## Firebase Setup Requirements
+
+If you plan to use Firebase in your project, ensure the following prerequisites are met:
+
+### 1. Firebase Project Setup
+
+Before running the brick generator with `use_firebase: true`, create a Firebase project:
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select an existing one
+3. Note your Firebase project ID (used during brick generation)
+4. Add Android app to your project:
+   - Register app with package name matching your `app_id`
+   - Download `google-services.json` and place it in the project root (or provide path during generation)
+5. Add iOS app to your project:
+   - Register app with bundle ID matching your `app_id`
+   - Download `GoogleService-Info.plist` (or provide path during generation)
+
+### 2. Firebase Project ID
+
+During brick generation, you will be prompted for your Firebase project ID:
+- This must be an existing Firebase project in your Firebase Console
+- The ID is used by FlutterFire CLI to generate flavor-specific configurations
+
+### 3. Post-Generation Setup
+
+After project generation, verify Firebase configuration:
+
+1. **Android Configuration**: Ensure `google-services.json` is placed in `android/app/`
+2. **iOS Configuration**: Ensure `GoogleService-Info.plist` is placed in `ios/Runner/` for each flavor
+3. **Run FlutterFire Configure** (if auto-configuration failed):
+   ```bash
+   ./flutterfire-config.sh dev
+   ./flutterfire-config.sh stg
+   ./flutterfire-config.sh prod
+   ```
+
+### 4. Troubleshooting
+
+- **Authentication Issues**: Ensure Firebase CLI is logged in with `firebase login`
+- **Missing Configurations**: Run `flutterfire configure` manually for each flavor
+- **Build Errors**: Verify `google-services.json` matches your package name
+
+## Installation and Update
+
+### Install the Brick
 
 Add directly from Git in your global mason configuration:
 
 ```bash
-mason add starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
+mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
+```
+
+### Update to Latest Version
+
+To update the brick to the latest version from Git:
+
+```bash
+mason update -g starter
+```
+
+This will fetch and install the latest changes from the `main` branch of the repository.
+
+### Update from Specific Branch or Commit
+
+If you need to update from a specific branch or use a particular version:
+
+```bash
+# Update to a specific branch
+mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref branch-name
+
+# Update to a specific tag
+mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref v0.1.5
+
+# Update to a specific commit
+mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref abc123def
+```
+
+### Reinstall After Updates
+
+If Mason cached files cause issues, reinstall the brick:
+
+```bash
+mason remove -g starter
+mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
 ```
 
 ## Usage
@@ -59,7 +138,7 @@ mason add starter --git-url https://github.com/Logique-ID/project-starter.git --
 From the repository root (or anywhere if installed globally):
 
 ```bash
-mason make starter
+mason make -g starter
 ```
 
 ### Optional Features

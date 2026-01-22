@@ -55,12 +55,6 @@ Before running the brick generator with `use_firebase: true`, create a Firebase 
 1. Go to the [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project or select an existing one
 3. Note your Firebase project ID (used during brick generation)
-4. Add Android app to your project:
-   - Register app with package name matching your `app_id`
-   - Download `google-services.json` and place it in the project root (or provide path during generation)
-5. Add iOS app to your project:
-   - Register app with bundle ID matching your `app_id`
-   - Download `GoogleService-Info.plist` (or provide path during generation)
 
 ### 2. Firebase Project ID
 

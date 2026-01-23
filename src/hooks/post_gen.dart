@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:mason/mason.dart';
 
 import 'helper.dart';
+import 'package:path/path.dart' as path;
 
 Future<void> run(HookContext context) async {
   // Create Kotlin package directory structure from app_id
@@ -32,6 +34,9 @@ Future<void> run(HookContext context) async {
         command: 'sh',
         arguments: ['flutterfire-config.sh', 'prod'],
       );
+
+      // Reorder FlutterFire build phases to ensure correct order
+      await reorderFlutterFireBuildPhases(context);
     }
   }
 
@@ -109,4 +114,66 @@ Future<void> run(HookContext context) async {
     command: 'dart',
     arguments: ['format', '.'],
   );
+}
+
+// Reorder FlutterFire build phases to ensure correct order
+Future<void> reorderFlutterFireBuildPhases(HookContext context) async {
+  final projectName = context.vars['project_name'] as String?;
+  if (projectName == null || projectName.isEmpty) {
+    context.logger.warn('project_name not found in context');
+    return;
+  }
+
+  final pbxprojPath = path.join(
+    Directory.current.path,
+    projectName,
+    'ios',
+    'Runner.xcodeproj',
+    'project.pbxproj',
+  );
+
+  final file = File(pbxprojPath);
+  if (!await file.exists()) {
+    return;
+  }
+
+  final lines = await file.readAsLines();
+  bool modified = false;
+
+  const bundleServiceLiteral =
+      '/* FlutterFire: "flutterfire bundle-service-file" */,';
+  const uploadCrashlyticsLiteral =
+      '/* FlutterFire: "flutterfire upload-crashlytics-symbols" */,';
+
+  for (int i = 0; i < lines.length; i++) {
+    if (lines[i].contains('buildPhases = (')) {
+      int bundleIdx = -1;
+      int uploadIdx = -1;
+
+      // Scan within the buildPhases block
+      int j = i + 1;
+      while (j < lines.length && !lines[j].contains(');')) {
+        if (lines[j].contains(bundleServiceLiteral)) bundleIdx = j;
+        if (lines[j].contains(uploadCrashlyticsLiteral)) uploadIdx = j;
+        j++;
+      }
+
+      // If both phases are found in the same target and in the wrong order, swap them
+      if (bundleIdx != -1 && uploadIdx != -1 && bundleIdx > uploadIdx) {
+        final temp = lines[bundleIdx];
+        lines[bundleIdx] = lines[uploadIdx];
+        lines[uploadIdx] = temp;
+        modified = true;
+      }
+
+      // Move outer loop index to the end of this block
+      i = j;
+    }
+  }
+
+  if (modified) {
+    await file.writeAsString(lines.join('\n'));
+    context.logger
+        .success('Reordered FlutterFire build phases in project.pbxproj');
+  }
 }

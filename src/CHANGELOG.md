@@ -1,3 +1,14 @@
+# 0.1.8
+
+## Changes
+
+### Improvements
+- **Hook Helper Optimization**: Refactored `HookHelper` for better maintainability and performance.
+- **Firebase Build Phase Optimization**: Enhanced `reorderFlutterFireBuildPhases` in `post_gen.dart` to correctly sequence FlutterFire build phases on iOS, ensuring proper Crashlytics symbol uploading.
+
+### Documentation
+- **README Updates**: Added comprehensive Firebase setup requirements and installation instructions. Corrected outdated setup steps.
+
 # 0.1.7
 
 ## Changes

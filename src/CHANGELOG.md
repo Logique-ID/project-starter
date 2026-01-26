@@ -1,3 +1,15 @@
+# 0.1.9
+
+## Changes
+
+### Features
+- **Comprehensive Error Logging**: Implemented a robust error logging system using a facade pattern.
+  - Added support for Sentry and Firebase Crashlytics clients.
+  - Centralized error tracking with `ErrorLogFacade`.
+  - Conditional integration based on `use_sentry` and `use_firebase` flags.
+- **Analytics Refactoring**: Structured analytics clients and improved integration with `AnalyticsFacade`.
+- **Improved Initializer**: Streamlined app initialization and startup logic.
+
 # 0.1.8
 
 ## Changes

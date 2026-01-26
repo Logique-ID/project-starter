@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-{{#use_mixpanel}}import '../service/mixpanel/mixpanel_analytics_client.dart';{{/use_mixpanel}}
-{{^use_mixpanel}}{{#use_firebase}}import '../service/firebase/analytics/firebase_analytics_client.dart';{{/use_firebase}}{{/use_mixpanel}}
+{{#use_mixpanel}}import '../../service/mixpanel/mixpanel_analytics_client.dart';{{/use_mixpanel}}
+{{^use_mixpanel}}{{#use_firebase}}import '../../service/firebase/analytics/firebase_analytics_client.dart';{{/use_firebase}}{{/use_mixpanel}}
 import 'analytics_client.dart';
 import 'logger_analytics_client.dart';
 
@@ -19,6 +19,10 @@ class AnalyticsFacade implements AnalyticsClient {
   @override
   Future<void> trackLogin() => _dispatch((c) => c.trackLogin());
 
+  @override
+  Future<void> trackScreenView(String routeName, String action) =>
+      _dispatch((c) => c.trackScreenView(routeName, action));
+
   ///TODO: Add other event tracking methods here
 
   Future<void> _dispatch(
@@ -30,9 +34,7 @@ class AnalyticsFacade implements AnalyticsClient {
 
 @Riverpod(keepAlive: true)
 AnalyticsFacade analyticsFacade(Ref ref) {
-  {{#use_mixpanel}}final mixpanelAnalyticsClient = ref
-      .watch(mixpanelAnalyticsClientProvider)
-      .requireValue;{{/use_mixpanel}}
+  {{#use_mixpanel}}final mixpanelAnalyticsClient = ref.watch(mixpanelAnalyticsClientProvider).requireValue;{{/use_mixpanel}}
   {{^use_mixpanel}}{{#use_firebase}}final firebaseAnalyticsClient = ref.watch(firebaseAnalyticsClientProvider);{{/use_firebase}}{{/use_mixpanel}}
   return AnalyticsFacade([
     {{#use_mixpanel}}mixpanelAnalyticsClient,{{/use_mixpanel}}

@@ -9,9 +9,9 @@ import '../../flavor.dart';
 import '../feature/authentication/data/auth_repository.dart';
 import '../feature/login/presentation/login_screen.dart';
 import '../feature/main_nav/presentation/main_nav_screen.dart';
-{{#use_dio}}
-import '../utils/data_source_config/dio/dio_config.dart';
-{{/use_dio}}
+import '../monitoring/analytics/analytics_facade.dart';
+import '../monitoring/analytics/logger_navigator_observer.dart';
+{{#use_dio}}import '../utils/data_source_config/dio/dio_config.dart';{{/use_dio}}
 import 'go_router_refresh_stream.dart';
 
 part 'app_router.g.dart';
@@ -34,6 +34,7 @@ GoRouter goRouter(Ref ref) {
     refreshListenable: GoRouterRefreshStream(
       authRepository.authStateChangesStream(),
     ),
+    observers: [LoggerNavigatorObserver(ref.read(analyticsFacadeProvider))],
     redirect: (context, state) {
       final isLoggedin = authRepository.currentUser?.accessToken != null;
       // TODO if not logged in but want to go to authorized screen then redirect to login
@@ -76,6 +77,8 @@ Page<dynamic> _transitionPage({
       ? CupertinoPage<void>(
           maintainState: true,
           key: state.pageKey,
+          name: state.name ?? state.uri.toString(),
+          arguments: state.extra,
           child: child,
           restorationId: 'app',
         )
@@ -83,6 +86,8 @@ Page<dynamic> _transitionPage({
           maintainState: true,
           transitionDuration: const Duration(milliseconds: 320),
           key: state.pageKey,
+          name: state.name ?? state.uri.toString(),
+          arguments: state.extra,
           child: child,
           restorationId: 'app',
           transitionsBuilder:

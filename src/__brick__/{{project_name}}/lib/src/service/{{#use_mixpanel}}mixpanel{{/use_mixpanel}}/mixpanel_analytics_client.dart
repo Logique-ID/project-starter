@@ -3,7 +3,7 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../flavor.dart';
-import '../../monitoring/analytics_client.dart';
+import '../../monitoring/analytics/analytics_client.dart';
 
 part 'mixpanel_analytics_client.g.dart';
 
@@ -23,6 +23,14 @@ class MixpanelAnalyticsClient implements AnalyticsClient {
   @override
   Future<void> trackLogin() async {
     await _mixpanel.track('user_login');
+  }
+
+  @override
+  Future<void> trackScreenView(String routeName, String action) async {
+    await _mixpanel.track(
+      'screen_view',
+      properties: {'routeName': routeName, 'action': action},
+    );
   }
 
   ///TODO: Add other event tracking methods here

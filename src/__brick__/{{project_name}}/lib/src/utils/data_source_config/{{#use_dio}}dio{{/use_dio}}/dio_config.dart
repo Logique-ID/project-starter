@@ -13,6 +13,7 @@ import '../../../constant/constants.dart';
 import '../../../constant/error_message.dart';
 import '../../../feature/authentication/data/auth_repository.dart';
 import '../../../feature/login/domain/login_response.dart';
+import '../../../monitoring/error_log/error_log_facade.dart';
 import '../../common_utils.dart';
 
 part 'dio_config.g.dart';
@@ -101,7 +102,7 @@ Dio dioConfig(Ref ref) {
           msg = e.toString();
         }
 
-        CommonUtils.printAndRecordLog(msg, '${error.stackTrace}');
+        ref.read(errorLogFacadeProvider).nonFatalError(msg, error.stackTrace);
 
         return handler.next(error);
       },
@@ -146,7 +147,7 @@ Future<String?> _getAccessTokenAfterRefresh(Ref ref) async {
     log('refresh token success');
     return result.accessToken!;
   } catch (e, stackTrace) {
-    CommonUtils.printAndRecordLog(e, stackTrace.toString());
+    ref.read(errorLogFacadeProvider).nonFatalError(e, stackTrace);
     await ref.read(authRepositoryProvider).clearSession();
 
     return null;

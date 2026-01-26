@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../flavor.dart';
 import '../constant/error_message.dart';
-import '../utils/common_utils.dart';
+import '../monitoring/error_log/error_log_facade.dart';
 
-class AsyncValueWidget<T> extends StatelessWidget {
+class AsyncValueWidget<T> extends ConsumerWidget {
   const AsyncValueWidget({
     super.key,
     required this.value,
@@ -24,7 +24,7 @@ class AsyncValueWidget<T> extends StatelessWidget {
   final bool skipError;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return value.when(
       data: data,
       skipLoadingOnRefresh: skipRefreshLoading,
@@ -32,7 +32,7 @@ class AsyncValueWidget<T> extends StatelessWidget {
       error:
           onError ??
           (e, st) {
-            CommonUtils.printAndRecordLog('$e', '$st');
+            ref.read(errorLogFacadeProvider).nonFatalError(e, st);
 
             final isPrd = kReleaseMode || F.appFlavor == Flavor.prod;
 

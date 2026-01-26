@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 {{#use_dio}}
 import '../../../../flavor.dart';
 {{#use_firebase}}
-import '../../../utils/common_utils.dart';
+import '../../../monitoring/error_log/error_log_facade.dart';
 {{/use_firebase}}
 import '../../../utils/data_source_config/dio/dio_config.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -62,7 +62,7 @@ Future<LoginResponse> login(
   } catch (e, stackTrace) {
     {{#use_firebase}}
     // Record to Log Monitoring
-    CommonUtils.printAndRecordLog(e, stackTrace.toString());
+    ref.read(errorLogFacadeProvider).nonFatalError(e, stackTrace);
     {{/use_firebase}}
     rethrow;
   }
@@ -73,7 +73,7 @@ Future<LoginResponse> login(
     throw UnimplementedError('Login not implemented. Please implement your HTTP client.');
   } catch (e, stackTrace) {
     // Record to Log Monitoring
-    CommonUtils.printAndRecordLog(e, stackTrace.toString());
+    ref.read(errorLogFacadeProvider).nonFatalError(e, stackTrace);
     rethrow;
   }
   {{/use_dio}}

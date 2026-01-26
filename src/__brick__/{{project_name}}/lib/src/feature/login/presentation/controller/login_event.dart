@@ -4,8 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../monitoring/analytics_facade.dart';
-import '../../../../utils/common_utils.dart';
+import '../../../../monitoring/analytics/analytics_facade.dart';
+import '../../../../monitoring/error_log/error_log_facade.dart';
 import 'login_controller.dart';
 
 mixin class LoginEvent {
@@ -34,7 +34,7 @@ mixin class LoginEvent {
 
         ref.invalidate(loginControllerProvider);
       } catch (e, st) {
-        CommonUtils.printAndRecordLog(e, st.toString());
+        ref.read(errorLogFacadeProvider).nonFatalError(e, st);
       }
     }
   }

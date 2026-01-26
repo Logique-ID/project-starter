@@ -1,7 +1,13 @@
-import 'package:flutter/material.dart';
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
+
+import 'analytics_facade.dart';
+
 class LoggerNavigatorObserver extends NavigatorObserver {
+  LoggerNavigatorObserver(this._analytics);
+  final AnalyticsFacade _analytics;
+
   static const _name = 'Navigation';
 
   @override
@@ -23,7 +29,7 @@ class LoggerNavigatorObserver extends NavigatorObserver {
 
   void _logNavigation(String? routeName, String action) {
     if (routeName != null) {
-      log("Screen $action: $routeName", name: _name);
+      _analytics.trackScreenView(routeName, action);
     } else {
       log('Route name is missing', name: _name);
     }

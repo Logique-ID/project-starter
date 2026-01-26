@@ -12,10 +12,10 @@ import '../core/mixins/startup_mixin.dart';
 {{#use_localization}}
 import '../localization/app_localization_repository.dart';
 {{/use_localization}}
+import '../monitoring/error_log/error_log_facade.dart';
 {{#use_firebase}}
 import '../service/firebase/firebase_service.dart';
 {{/use_firebase}}
-import '../utils/common_utils.dart';
 import '../utils/data_source_config/sembast/sembast_config.dart';
 
 part 'app_startup.g.dart';
@@ -49,7 +49,7 @@ class AppStartupScreen extends ConsumerWidget with StartupMixin {
       data: (_) => const App(),
       loading: () => const _AppStartupWidget(isLoading: true),
       error: (e, st) {
-        CommonUtils.printAndRecordLog(e, st.toString());
+        ref.read(errorLogFacadeProvider).nonFatalError(e, st);
         return _AppStartupWidget(
           isLoading: false,
           message: kReleaseMode

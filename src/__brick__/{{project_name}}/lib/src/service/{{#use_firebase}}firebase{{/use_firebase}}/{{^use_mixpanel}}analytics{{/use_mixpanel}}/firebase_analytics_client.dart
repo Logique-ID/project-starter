@@ -1,7 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../monitoring/analytics_client.dart';
+import '../../../monitoring/analytics/analytics_client.dart';
 
 part 'firebase_analytics_client.g.dart';
 
@@ -17,6 +17,14 @@ class FirebaseAnalyticsClient implements AnalyticsClient {
   @override
   Future<void> trackLogin() async {
     await _analytics.logEvent(name: 'user_login');
+  }
+
+  @override
+  Future<void> trackScreenView(String routeName, String action) async {
+    await _analytics.logScreenView(
+      screenName: 'screen_view',
+      parameters: {'name': routeName, 'action': action},
+    );
   }
 
   ///TODO: Add other event tracking methods here

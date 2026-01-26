@@ -5,7 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../feature/authentication/data/auth_repository.dart';
-import '../../utils/common_utils.dart';
+import '../../monitoring/error_log/error_log_facade.dart';
 import '../notification/local_notification.dart';
 
 part 'firebase_service.g.dart';
@@ -48,7 +48,7 @@ class FirebaseService {
         token = await FirebaseMessaging.instance.getToken();
       }
     } catch (e, stackTrace) {
-      CommonUtils.printAndRecordLog(e, stackTrace.toString());
+      _ref.read(errorLogFacadeProvider).nonFatalError(e, stackTrace);
       token = 'unknown';
     }
 

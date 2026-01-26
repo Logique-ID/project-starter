@@ -18,5 +18,10 @@ class LoggerAnalyticsClient implements AnalyticsClient {
     log('trackLogin', name: _name);
   }
 
+  @override
+  Future<void> trackScreenView(String routeName, String action) async {
+    log('trackScreenView($routeName, $action)', name: _name);
+  }
+
   ///TODO: Add other event tracking methods here
 }

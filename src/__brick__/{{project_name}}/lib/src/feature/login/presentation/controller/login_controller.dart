@@ -1,6 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/login_repository.dart';
+import '../../data/remote/local_login_repo_impl.dart';
 
 part 'login_controller.g.dart';
 
@@ -15,14 +17,18 @@ class LoginController extends _$LoginController {
     required String recaptchaToken,
   }) async {
     state = const AsyncValue.loading();
+    final loginRepo = ref.watch(loginRepoProvider);
     state = await AsyncValue.guard(
-      () => ref.watch(
-        loginProvider(
-          username: username,
-          password: password,
-          recaptchaToken: recaptchaToken,
-        ).future,
+      () => loginRepo.login(
+        username: username,
+        password: password,
+        recaptchaToken: recaptchaToken,
       ),
     );
   }
 }
+
+/// Interface for LoginRepository
+final loginRepoProvider = Provider<LoginRepository>((ref) {
+  return RemoteLoginRepositoryImpl(ref);
+});

@@ -11,6 +11,7 @@ import 'src/monitoring/error_log/error_log_facade.dart';
 import 'src/service/firebase/firebase_service.dart';{{/use_firebase}}
 {{#use_mixpanel}}import 'src/service/mixpanel/mixpanel_analytics_client.dart';{{/use_mixpanel}}
 {{#use_sentry}}import 'src/service/sentry/sentry_client.dart';{{/use_sentry}}
+import 'src/service/freerasp/freerasp_service.dart';
 
 Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOptions}{{/use_firebase}}) async {
   final container = ProviderContainer();
@@ -65,6 +66,10 @@ Future<void> initializeApp({{#use_firebase}}{required FirebaseOptions firebaseOp
     errorLog.nonFatalError(error, stack);
     return true;
   };
+
+  // Initialize freeRASP
+  final freerasp = container.read(freeraspServiceProvider);
+  await freerasp.init();
 
   runApp(
     UncontrolledProviderScope(

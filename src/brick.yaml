@@ -58,3 +58,25 @@ vars:
     description: Implement Mixpanel (Will replace Firebase Analytics if enabled)
     default: false
     prompt: Implement Mixpanel (Will replace Firebase Analytics if enabled)?
+  
+  # Security
+  detect_passcode:
+    type: boolean
+    description: Implement passcode detection
+    default: true
+    prompt: Implement passcode detection?
+  detect_vpn:
+    type: boolean
+    description: Implement VPN detection
+    default: true
+    prompt: Implement VPN detection?
+  detect_screenshots:
+    type: boolean
+    description: Implement screenshots detection
+    default: true
+    prompt: Implement screenshots detection?
+  detect_screenrecord:
+    type: boolean
+    description: Implement screen record detection
+    default: true
+    prompt: Implement screen record detection?

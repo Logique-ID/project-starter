@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lazy_load_indexed_stack/lazy_load_indexed_stack.dart';
 
+import '../../../common_widget/custom_snackbar.dart';
 import '../../../routing/app_router.dart';
+import '../../../service/freerasp/freerasp_service.dart';
 import '../../../theme/app_color_theme.dart';
 import '../../../theme/app_text_theme.dart';
 import '../../berita/presentation/berita_subscreen.dart';
@@ -34,6 +36,18 @@ class MainNavScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Threat detection listener to update UI
+    ref
+        .read(freeraspServiceProvider)
+        .attachListener(
+          {{#detect_passcode}}onPasscode: () => showThreatDialog(context, 'Passcode not set'),{{/detect_passcode}}
+          {{#detect_vpn}}onSystemVPN: () => showThreatDialog(context, 'System VPN detected'),{{/detect_vpn}}
+          {{#detect_screenshots}}onScreenshot: () =>
+              showThreatDialog(context, 'Screenshot capture detected'),{{/detect_screenshots}}
+          {{#detect_screenrecord}}onScreenRecording: () =>
+              showThreatDialog(context, 'Screen recording detected'),{{/detect_screenrecord}}
+        );
+
     return Scaffold(
       body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
@@ -61,5 +75,9 @@ class MainNavScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  void showThreatDialog(BuildContext context, String threatType) {
+    CustomSnackbar.show(context, CustomSnackbarMode.warning, threatType);
   }
 }

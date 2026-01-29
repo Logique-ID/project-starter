@@ -37,6 +37,26 @@ class F {
         return 'API_KEY_PROD';
     }
   }
+
+  static String get packageName {
+    switch (appFlavor) {
+      case Flavor.dev:
+        return '{{{app_id}}}.dev';
+      case Flavor.stg:
+        return '{{{app_id}}}.stg';
+      default:
+        return '{{{app_id}}}';
+    }
+  }
+
+  /// Talsec RASP
+  // Replace with your release (!) signing certificate hash(es)
+  static String get androidSigningCertHash =>
+      'mVr/qQLO8DKTwqlL+B1qigl9NoBnbiUs8b4c2Ewcz0k=';
+  // iOS Team ID
+  static String get iosTeamId => 'IOS_TEAM_ID';
+  // Replace with your email
+  static String get watcherMail => 'example@logique.co.id';
   {{#use_sentry}}
   /// Sentry DSN for error tracking
   static String get sentryDsn => '{{{sentry_dsn}}}';

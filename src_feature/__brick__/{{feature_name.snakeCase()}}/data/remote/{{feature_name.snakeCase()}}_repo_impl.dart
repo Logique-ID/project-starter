@@ -6,4 +6,6 @@ class Remote{{feature_name.pascalCase()}}RepositoryImpl implements {{feature_nam
   Remote{{feature_name.pascalCase()}}RepositoryImpl(this.ref);
 
   final Ref ref;
+
+  // TODO: implement repository
 }

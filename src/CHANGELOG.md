@@ -1,3 +1,18 @@
+# 0.2.1
+
+## Changes
+
+### Features
+- **Feature Brick Template**: Added a new Mason brick template for generating feature modules.
+  - Created `src_feature` directory with feature brick configuration.
+  - Includes automatic code generation and formatting in post-generation hook.
+  - Generates feature structure with data layer (repository, implementation) and presentation layer (controller, screen).
+  - Auto-installs feature brick globally after project generation for easy feature scaffolding.
+
+### Improvements
+- **VS Code Tasks**: Updated generated project to include "Create Feature" task for quick feature generation.
+- **Hook Helper Enhancement**: Added `withRollback` parameter to `runCommand` for optional rollback behavior.
+
 # 0.2.0
 
 ## Changes

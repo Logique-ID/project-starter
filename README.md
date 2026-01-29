@@ -18,6 +18,7 @@ This repository contains a [Mason](https://github.com/felangel/mason) brick that
 - **Localization**: English and Indonesian (extensible, optional)
 - **Form Handling**: Flutter Form Builder with validators
 - **Custom Icons & Splash**: Automated generation via Flutter Launcher Icons and Native Splash (optional)
+- **Security**: Threat detection and application shielding via FreeRASP
 
 ## Prerequisites
 
@@ -144,6 +145,7 @@ The brick supports several optional features that can be enabled or disabled:
 - **Dio HTTP Client** (`use_dio`): When enabled, includes Dio with Alice debugging inspector for HTTP requests. When disabled, provides TODO comments suggesting alternative HTTP client implementations.
 - **Sentry** (`use_sentry`): When enabled, includes Sentry for error tracking and performance monitoring, replacing Firebase Crashlytics.
 - **Mixpanel** (`use_mixpanel`): When enabled, includes Mixpanel for analytics, replacing Firebase Analytics.
+- **Security** (`detect_...`): Optional threat detection for passcode, VPN, screenshots, and screen recording.
 
 All optional features default to `true` for a complete setup, but can be disabled to create a minimal project structure.
 
@@ -163,6 +165,10 @@ The generator will ask for the following information:
 | `use_dio` | Enable Dio HTTP client with Alice debugging | `true` |
 | `use_sentry` | Enable Sentry error tracking | `false` |
 | `use_mixpanel` | Enable Mixpanel analytics | `false` |
+| `detect_passcode` | Implement passcode detection | `true` |
+| `detect_vpn` | Implement VPN detection | `true` |
+| `detect_screenshots` | Implement screenshots detection | `true` |
+| `detect_screenrecord` | Implement screen record detection | `true` |
 
 If you select custom options:
 - **Custom Icon**: You'll be prompted for the path to your icon file (1024x1024 PNG recommended)

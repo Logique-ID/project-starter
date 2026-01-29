@@ -1,3 +1,19 @@
+# 0.2.0
+
+## Changes
+
+### Features
+- **FreeRASP Integration**: Implemented comprehensive application security using FreeRASP.
+  - Added threat detection for Root, Jailbreak, Simulator, Hooking, and Debugging.
+  - Added `freerasp_service.dart` for centralized security monitoring.
+  - Integrated security configuration in `flavor.dart`.
+- **Login Repository Refraction**: Abstracted Login Repository for better testability and separation of concerns.
+  - Separated interface `LoginRepository` from implementation `LocalLoginRepoImpl`.
+  - Added comprehensive unit tests for `LoginRepositoryImpl`.
+
+### Improvements
+- **Development Experience**: Added VS Code task configuration for easier code generation.
+
 # 0.1.9
 
 ## Changes

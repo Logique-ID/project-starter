@@ -10,6 +10,7 @@ class HookHelper {
     HookContext context, {
     required String command,
     required List<String> arguments,
+    bool withRollback = true,
   }) async {
     final projectName = context.vars['project_name'] as String;
     final directory = path.join(Directory.current.path, projectName);
@@ -27,12 +28,11 @@ class HookHelper {
         runInShell: true, // Often needed for commands like 'flutter' on Windows
       );
 
-      if (result.exitCode == 0) {
+      if (result.exitCode == 0 || !withRollback) {
         progress
             .complete('Successfully executed $command ${arguments.join(' ')}');
       } else {
         progress.fail('Failed to execute $command ${arguments.join(' ')}');
-        await rollback(context);
         throw MasonException(result.stderr.toString());
       }
     } catch (e) {

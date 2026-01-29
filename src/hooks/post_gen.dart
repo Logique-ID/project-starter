@@ -115,6 +115,29 @@ Future<void> run(HookContext context) async {
     command: 'dart',
     arguments: ['format', '.'],
   );
+
+  /// Remove feature brick
+  await HookHelper.runCommand(
+    context,
+    command: 'mason',
+    arguments: ['remove', '-g', 'feature'],
+    withRollback: false,
+  );
+
+  /// Add feature brick
+  await HookHelper.runCommand(
+    context,
+    command: 'mason',
+    arguments: [
+      'add',
+      '-g',
+      'feature',
+      '--git-url',
+      'https://github.com/Logique-ID/project-starter.git',
+      '--git-path',
+      'src_feature',
+    ],
+  );
 }
 
 // Reorder FlutterFire build phases to ensure correct order

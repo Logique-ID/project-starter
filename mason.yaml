@@ -1,3 +1,7 @@
 bricks:
+  # Starter brick for new projects
   starter:
     path: src
+  # Feature brick for new features
+  feature:
+    path: src_feature

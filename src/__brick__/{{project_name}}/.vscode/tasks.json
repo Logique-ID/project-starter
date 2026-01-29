@@ -4,9 +4,16 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
             "type": "shell",
-            "command": "echo Hello"
+            "command": "mason",
+            "args": [
+                "make",
+                "feature",
+                "-o",
+                "lib/src/feature"
+            ],
+            "problemMatcher": [],
+            "label": "Create Feature",
         }
     ]
 }

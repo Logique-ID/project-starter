@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "mason",
+			"args": [
+				"make",
+				"starter",
+				"--config-path",
+				"config/config.json"
+			],
+			"problemMatcher": [],
+			"label": "Mason Starter",
+		}
+	]
+}

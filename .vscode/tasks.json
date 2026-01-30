@@ -12,6 +12,20 @@
 			],
 			"problemMatcher": [],
 			"label": "Create Starter",
+		},
+		{
+			"type": "shell",
+			"command": "mason",
+			"args": [
+				"make",
+				"starter",
+				"-o",
+				"ref",
+				"--config-path",
+				"config/config-ref.json"
+			],
+			"problemMatcher": [],
+			"label": "Create Starter Ref",
 		}
 	]
 }

@@ -1,18 +1,18 @@
 {{#use_dio}}import 'package:dio/dio.dart';{{/use_dio}}
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 {{#use_dio}}
-import '../../../../../flavor.dart';
+import '../../../../../../flavor.dart';
 import '../../../../monitoring/error_log/error_log_facade.dart';
 import '../../../../utils/data_source_config/dio/dio_config.dart';
 import '../../../authentication/data/auth_repository.dart';
+import '../../domain/login_response.dart';
+import '../login_repository.dart';
 {{/use_dio}}
 {{^use_dio}}
 import '../../../../monitoring/error_log/error_log_facade.dart';
-{{#use_firebase}}import '../../../../utils/common_utils.dart';{{/use_firebase}}
-{{/use_dio}}
 import '../../domain/login_response.dart';
 import '../login_repository.dart';
-
+{{/use_dio}}
 class RemoteLoginRepositoryImpl implements LoginRepository {
   RemoteLoginRepositoryImpl(this._ref);
 

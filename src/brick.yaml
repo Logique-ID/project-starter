@@ -58,6 +58,11 @@ vars:
     description: Implement Mixpanel (Will replace Firebase Analytics if enabled)
     default: false
     prompt: Implement Mixpanel (Will replace Firebase Analytics if enabled)?
+  use_legacy:
+    type: boolean
+    description: Use legacy feature
+    default: false
+    prompt: Use legacy feature?
   
   # Security
   detect_passcode:

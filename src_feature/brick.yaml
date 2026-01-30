@@ -1,6 +1,6 @@
 name: feature
 description: Feature brick for new features
-version: 0.1.1
+version: 0.1.2
 
 environment:
   mason: ^0.1.2
@@ -11,3 +11,8 @@ vars:
     description: Feature name
     default: feature
     prompt: What is the feature name?
+  use_legacy:
+    type: boolean
+    description: Use legacy feature
+    default: false
+    prompt: Do you want to use legacy feature?

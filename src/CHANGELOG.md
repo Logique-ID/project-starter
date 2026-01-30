@@ -1,3 +1,18 @@
+# 0.2.2
+
+## Changes
+
+### Features
+- **Legacy vs Abstract Architecture Choice**: Added `use_legacy` variable to choose between legacy and abstract repository patterns.
+  - When `use_legacy` is `false` (default): Uses abstract repository pattern with interface separation for better testability.
+  - When `use_legacy` is `true`: Uses traditional Riverpod pattern with direct implementation.
+  - Applied to both starter brick and feature brick templates.
+  - Includes conditional generation of repository implementations and controller patterns.
+
+### Improvements
+- **VS Code Tasks**: Added additional task configuration for legacy feature generation.
+- **Feature Brick**: Updated to version 0.1.2 with `use_legacy` support.
+
 # 0.2.1
 
 ## Changes

@@ -1,3 +1,17 @@
+# 0.2.3
+
+## Changes
+
+### Features
+- **Responsive Layout System**: Added responsive utilities and device info management.
+  - Includes `DeviceInfo` + `deviceInfoProvider` and `DeviceInfoListener` for centralized device metrics.
+  - Added `ResponsiveLayout` widget and `BuildContext` responsive extensions.
+
+### Improvements
+- **Windsurf Rules**: Added generated `.windsurfrules` to the starter template.
+- **VS Code Tasks**: Added task to create a starter reference project and a legacy feature generation task.
+- **Reference Project**: Updated the `project-starter-ref` submodule.
+
 # 0.2.2
 
 ## Changes

@@ -1,6 +1,6 @@
 name: starter
 description: A starter brick for a new Flutter project with flavors (dev, stg, prod), Firebase, Riverpod, and more.
-version: 0.2.2
+version: 0.2.3
 
 environment:
   mason: ^0.1.2

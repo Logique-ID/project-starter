@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lazy_load_indexed_stack/lazy_load_indexed_stack.dart';
 
 import '../../../common_widget/custom_snackbar.dart';
+import '../../../core/responsive/device_info_listener.dart';
 import '../../../routing/app_router.dart';
 import '../../../service/freerasp/freerasp_service.dart';
 import '../../../theme/app_color_theme.dart';
@@ -26,7 +27,7 @@ class MainNavScreen extends ConsumerWidget {
       index: currentIndex,
       children: const [
         HomeSubscreen(),
-        BeritaSubscreen(),
+        DeviceInfoListener(child: BeritaSubscreen()),
         LaporanSubscreen(),
         KegiatanSubscreen(),
         FAQSubscreen(),

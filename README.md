@@ -176,23 +176,28 @@ If you select custom options:
 
 ### Non-Interactive Mode
 
-You can also pass variables directly:
-
-```bash
-mason make starter \
-  --project_name awesome_app \
-  --app_name "Awesome App" \
-  --app_id com.mycompany.awesomeapp \
-  --custom_icon false \
-  --use_splash true \
-  --use_firebase true \
-  --use_localization true \
-  --use_dio true \
-  --use_sentry false \
-  --use_mixpanel false
-```
-
-## Generated Project Structure
+ You can also pass variables directly:
+ 
+ ```bash
+ mason make starter \
+   --project_name awesome_app \
+   --app_name "Awesome App" \
+   --app_id com.mycompany.awesomeapp \
+   --custom_icon false \
+   --use_splash true \
+   --use_firebase true \
+   --use_localization true \
+   --use_dio true \
+   --use_sentry false \
+   --use_mixpanel false \
+   --use_legacy false \
+   --detect_passcode true \
+   --detect_vpn true \
+   --detect_screenshots true \
+   --detect_screenrecord true
+ ```
+ 
+ ## Generated Project Structure
 
 ```
 your_project_name/

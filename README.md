@@ -97,33 +97,17 @@ mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git
 To update the brick to the latest version from Git:
 
 ```bash
-mason update -g starter
+mason upgrade -g starter
 ```
 
 This will fetch and install the latest changes from the `main` branch of the repository.
 
-### Update from Specific Branch or Commit
-
-If you need to update from a specific branch or use a particular version:
-
-```bash
-# Update to a specific branch
-mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref branch-name
-
-# Update to a specific tag
-mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref v0.1.5
-
-# Update to a specific commit
-mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src --git-ref abc123def
-```
-
-### Reinstall After Updates
+### Remove Brick
 
 If Mason cached files cause issues, reinstall the brick:
 
 ```bash
 mason remove -g starter
-mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git --git-path src
 ```
 
 ## Usage
@@ -133,7 +117,7 @@ mason add -g starter --git-url https://github.com/Logique-ID/project-starter.git
 From the repository root (or anywhere if installed globally):
 
 ```bash
-mason make -g starter
+mason make starter
 ```
 
 ### Optional Features

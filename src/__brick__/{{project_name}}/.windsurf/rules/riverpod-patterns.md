@@ -1,0 +1,583 @@
+---
+trigger: glob
+description:
+globs: **/controller/*.dart,**/data/*.dart,**/*_repository.dart,**/*_provider.dart
+---
+# Riverpod Patterns
+
+## Provider Types
+
+This project uses Riverpod with code generation (`riverpod_annotation` and `riverpod_generator`).
+
+### Repository Providers
+
+Repositories are created using `@riverpod` or `@Riverpod` annotations:
+
+```dart
+@riverpod
+AppLocalizationRepository appLocalizationRepository(Ref ref) {
+  final sembastDatabase = ref.read(sembastDatabaseProvider).requireValue;
+  final store = sembastDatabase.store;
+  final db = sembastDatabase.db;
+  return AppLocalizationRepository(store, db);
+}
+```
+
+For providers that should persist across rebuilds, use `@Riverpod(keepAlive: true)`:
+
+```dart
+@Riverpod(keepAlive: true)
+AuthRepository authRepository(Ref ref) {
+  // ...
+  ref.onDispose(() => authRepository.dispose());
+  return authRepository;
+}
+```
+
+### State Providers
+
+For simple state, use `StateProvider`:
+
+```dart
+final localeProvider = StateProvider<String>((ref) {
+  return 'en'; // default value
+});
+```
+
+- **Form selections**: when dropdown/text selections must be reused outside the widget (e.g. passed to repositories), define `StateProvider.autoDispose` inside the feature controller file. Example: `help_desk_controller.dart` lines 6‑17 declare `helpDeskCategoryProvider`, `helpDeskSubCategoryProvider`, `helpDeskShowErrorsProvider`. Keep these providers colocated with the controller so repositories can watch the latest selection without additional parameters.
+- **Repository integration**: repositories that submit form data should watch these providers directly rather than receiving raw values. Example: `help_desk_repository.dart` lines 19‑20 read the category providers before calling `/api/v1/sendfeedback`.
+- **Pre-filling state from API**: When fetching data to pre-fill form fields, set the `StateProvider` values **in the repository** immediately after parsing the API response, not in the UI layer. Example: `info_personal_repository.dart` lines 29‑31 set `genderProvider` and `dateOfBirthProvider` after receiving customer details. This ensures the state is initialized before the UI renders and keeps state management logic centralized in the data layer.
+
+### Using Providers
+
+- **Watch**: `ref.watch(provider)` - Rebuilds when provider changes
+- **Read**: `ref.read(provider)` - One-time read, doesn't rebuild
+- **Read notifier**: `ref.read(provider.notifier)` - Access notifier for state changes
+
+## Repository Pattern
+
+Repositories handle data operations and are provided via Riverpod:
+
+1. Create repository class in `data/` folder
+2. Add `@riverpod` provider function
+3. Include `part 'repository.g.dart';`
+4. Run build_runner to generate providers
+
+Example structure:
+```dart
+part 'auth_repository.g.dart';
+
+class AuthRepository {
+  // Implementation
+}
+
+@Riverpod(keepAlive: true)
+AuthRepository authRepository(Ref ref) {
+  // Provider implementation
+}
+```
+
+## Controller Pattern
+
+Features use mixins for event handling and state management:
+
+- **Event Mixins** (`*_event.dart`): Handle navigation and actions
+- **State Mixins** (`*_state.dart`): Manage feature-specific state
+
+Example from [home_event.dart](mdc:lib/src/feature/home/presentation/controller/home_event.dart):
+```dart
+mixin class HomeEvent {
+  void goToNewsDetail(WidgetRef ref, String newsId) {
+    ref.read(goRouterProvider).goNamed(/* ... */);
+  }
+}
+```
+
+## Provider Access Rules
+
+**CRITICAL**: Never use `ref.watch()` or `ref.read()` directly in UI layer files (screens, subscreens, widgets).
+
+### ✅ Allowed in UI Layer
+- `ref.listen()` - For side effects like showing snackbars, navigation callbacks, etc.
+
+### ❌ NOT Allowed in UI Layer
+- `ref.watch()` - Must be in state/event mixins or core mixins (e.g., `LocalizationMixin`)
+- `ref.read()` - Must be in state/event mixins or core mixins
+
+### ✅ Allowed in Mixins or Repository (State/Event/Core)
+- `ref.watch()` - Can be used directly in mixin classes
+- `ref.read()` - Can be used directly in mixin classes
+
+**Note**: Mixins (`*_state.dart`, `*_event.dart`, and core mixins like `LocalizationMixin`) are NOT considered UI layer, so they can use `ref.watch()` and `ref.read()` directly.
+
+### ✅ Correct Pattern
+
+**State Mixins** (`*_state.dart`): Encapsulate `ref.watch()` calls
+```dart
+mixin class HomeState {
+  AsyncValue<NewsListResponse?> getNewsList(WidgetRef ref) =>
+      ref.watch(getNewsListProvider);
+  
+  bool isLoggedIn(WidgetRef ref) =>
+      ref.watch(authRepositoryProvider).currentUser != null;
+}
+```
+
+**Event Mixins** (`*_event.dart`): Encapsulate `ref.read()` calls
+```dart
+mixin class HomeEvent {
+  void goToNewsDetail(WidgetRef ref, String newsId) {
+    ref.read(goRouterProvider).goNamed(/* ... */);
+  }
+}
+```
+
+**UI Layer**: Call mixin methods instead of direct provider access
+```dart
+class HomeSubscreen extends ConsumerWidget with HomeEvent, HomeState, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ✅ Correct: Use mixin methods
+    final newsList = getNewsList(ref);
+    final loc = getLocalizations(ref); // From LocalizationMixin
+    
+    // ❌ Wrong: Direct ref.watch in UI
+    // final newsList = ref.watch(getNewsListProvider);
+    // final loc = ref.watch(appLocalizationsProvider);
+    
+    // ✅ Allowed: ref.listen for side effects
+    ref.listen(forgotPasswordControllerProvider, (prev, next) {
+      // Handle side effects
+    });
+  }
+}
+```
+
+**Event/State Mixins**: Can use `ref.watch()`/`ref.read()` directly
+```dart
+// ✅ Correct: Event mixins can use ref.watch/ref.read directly
+mixin class RegisterEvent {
+  void register(WidgetRef ref) {
+    final loc = ref.watch(appLocalizationsProvider); // OK in mixin
+    // ...
+  }
+}
+```
+
+## Provider Refresh Patterns
+
+### Refreshing Multiple Providers
+
+When implementing pull-to-refresh or manual refresh functionality, use `ref.refresh()` with `Future.wait()` for concurrent execution:
+
+**Event Mixin Pattern** (`home_event.dart` lines 91-96):
+```dart
+mixin class HomeEvent {
+  Future<void> refreshHome(WidgetRef ref) async {
+    await Future.wait([
+      ref.refresh(getBannerListProvider.future),
+      ref.refresh(getNewsListProvider.future),
+      ref.refresh(getEventListProvider.future),
+    ]);
+  }
+}
+```
+
+**Key Points:**
+- Use `ref.refresh(provider.future)` instead of `ref.invalidate()` for better control
+- `ref.refresh()` forces the provider to re-execute and returns its future
+- Use `Future.wait([...])` to refresh multiple providers concurrently (parallel execution)
+- Method must return `Future<void>` for async operations
+- Place in event mixin, not directly in UI layer
+- Call from UI using pull-to-refresh widgets or manual triggers
+
+**When to use `ref.refresh()` vs `ref.invalidate()`:**
+- ✅ `ref.refresh()`: When you need to wait for refresh completion (e.g., pull-to-refresh)
+- ✅ `ref.invalidate()`: When you just want to mark provider as stale (fire-and-forget)
+
+## Async State Management
+
+Use `AsyncValue` for async operations:
+
+```dart
+final newsListProvider = FutureProvider<NewsListResponse>((ref) async {
+  final repository = ref.watch(newsRepositoryProvider);
+  return await repository.getNewsList();
+});
+```
+
+Display with [AsyncValueWidget](mdc:lib/src/common_widget/async_value_widget.dart):
+```dart
+AsyncValueWidget(
+  value: getNewsList(ref),
+  data: (newsList) => /* UI */,
+)
+```
+
+## Controller Async Methods
+
+Controllers manage async operations and expose them to the UI layer through `AsyncValue` states.
+
+### Basic Pattern (Single API Call)
+
+For simple operations with a single API call:
+
+1. **Set loading state first**: Always set `state = const AsyncValue.loading();` before async operations
+2. **Wrap in `AsyncValue.guard()`**: Ensures proper error handling and state management
+3. **Return the API response**: The response becomes the controller's state value
+
+**Example Pattern** (`forgot_password_controller.dart` lines 6‑18):
+```dart
+@riverpod
+class ForgotPasswordController extends _$ForgotPasswordController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> forgotPassword({required String email}) async {
+    // 1. Set loading state
+    state = const AsyncValue.loading();
+
+    // 2. Wrap in AsyncValue.guard for automatic error handling
+    state = await AsyncValue.guard(
+      () => ref.watch(forgotPasswordProvider(email: email).future),
+    );
+  }
+}
+```
+
+**Key Points:**
+- `AsyncValue.guard()` automatically catches errors and converts them to `AsyncError` state
+- The returned value becomes `next.value` in the UI's `ref.listen()` callback
+- No need to manually handle try-catch blocks when using `AsyncValue.guard()`
+- Controller methods should be called from event mixins, not directly from UI
+
+### Advanced Pattern (Conditional/Multiple API Calls)
+
+When a controller method needs to call multiple APIs conditionally (e.g., only upload image if changed, only update profile if data changed):
+
+1. **Wrap in `AsyncValue.guard()`**: Ensures proper error handling and state management
+2. **Call APIs conditionally**: Check conditions before each API call
+3. **Return final response**: The last API response becomes the controller's state value
+4. **Set loading state first**: Always set `state = const AsyncValue.loading();` before async operations
+
+**Example Pattern** (`info_personal_controller.dart` lines 13‑56):
+```dart
+@riverpod
+class InfoPersonalController extends _$InfoPersonalController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> updateProfile({
+    required String userId,
+    String? imagePath, // Optional: only if changed
+    required String email,
+    required String fullname,
+    // ... other fields
+  }) async {
+    // 1. Set loading state
+    state = const AsyncValue.loading();
+
+    // 2. Wrap in AsyncValue.guard for error handling
+    state = await AsyncValue.guard(() async {
+      // 3. Conditional API call: only if image changed
+      if (imagePath != null) {
+        await ref.watch(
+          changeProfilePictureProvider(
+            userId: userId,
+            imagePath: imagePath,
+          ).future,
+        );
+      }
+
+      // 4. Always call main update, this becomes the final response
+      return await ref.watch(
+        editProfileProvider(
+          userId: userId,
+          email: email,
+          fullname: fullname,
+          // ... other fields
+        ).future,
+      );
+    });
+  }
+}
+```
+
+**Key Points:**
+- Only call APIs when necessary (e.g., only upload image if `imagePath != null`)
+- The last `return` statement determines what `next.value` will be in the UI listener
+- Use `await AsyncValue.guard()` to handle errors automatically
+- The final returned value should typically be the most important API response (usually the one with success/error messages)
+
+## File Upload Pattern
+
+When uploading files (images, documents, etc.) to the server, use `FormData` with `MultipartFile` in repository methods. This pattern is used for profile pictures, report attachments, and other file uploads.
+
+### Repository Pattern for File Upload
+
+**1. Use `FormData` with `MultipartFile`** (`info_personal_repository.dart` lines 40‑67):
+
+```dart
+@riverpod
+Future<ForgotPasswordResponse> changeProfilePicture(
+  Ref ref, {
+  required String userId,
+  required String imagePath,
+}) async {
+  try {
+    final dio = ref.watch(dioConfigProvider);
+
+    // Create FormData with file
+    final formData = FormData.fromMap({
+      'user_id': userId,
+      'images': await MultipartFile.fromFile(imagePath),
+    });
+
+    // Use POST method with FormData
+    final response = await dio.post(
+      '/api/v1/changeprofilepicture',
+      data: formData,
+      cancelToken: ref.cancelToken(),
+    );
+
+    final result = ForgotPasswordResponse.fromJson(response.data);
+    return result;
+  } on DioException catch (error) {
+    throw onDioError(error);
+  } catch (e) {
+    rethrow;
+  }
+}
+```
+
+**Key Points:**
+- ✅ **Use `FormData.fromMap()`**: Creates multipart form data for file uploads
+- ✅ **Use `MultipartFile.fromFile()`**: Converts local file path to multipart file (must be `await`ed)
+- ✅ **POST method**: File uploads typically use POST (not PUT)
+- ✅ **Field name**: Use the exact field name expected by the API (e.g., `'images'`, `'file'`, `'attachment'`)
+- ✅ **Error handling**: Wrap in try-catch with `onDioError()` for user-friendly error messages
+
+### StateProvider for File Paths
+
+**2. Store file path in StateProvider** (`info_personal_controller.dart` lines 9‑11):
+
+```dart
+final profileImagePathProvider = StateProvider.autoDispose<String?>(
+  (ref) => null,
+);
+```
+
+**Key Points:**
+- ✅ **Use `StateProvider.autoDispose<String?>`**: File paths are temporary state that should be disposed
+- ✅ **Nullable type**: Path is `null` when no file is selected
+- ✅ **Store local path**: Store the local file path (from `image_picker` or file system), not the URL
+
+### Controller Pattern for Conditional File Upload
+
+**3. Conditionally upload file in controller** (`info_personal_controller.dart` lines 19‑57):
+
+```dart
+@riverpod
+class InfoPersonalController extends _$InfoPersonalController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> updateProfile({
+    required String userId,
+    String? imagePath, // Optional: only if file changed
+    required String email,
+    // ... other fields
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      // Upload file first if path is provided
+      if (imagePath != null) {
+        await ref.watch(
+          changeProfilePictureProvider(
+            userId: userId,
+            imagePath: imagePath,
+          ).future,
+        );
+      }
+
+      // Then update other profile data
+      return await ref.watch(
+        editProfileProvider(
+          userId: userId,
+          email: email,
+          // ... other fields
+        ).future,
+      );
+    });
+  }
+}
+```
+
+**Key Points:**
+- ✅ **Conditional upload**: Only call file upload API if `imagePath != null`
+- ✅ **Upload first**: Upload file before updating other data (if API requires file to be uploaded first)
+- ✅ **Sequential execution**: Use `await` to ensure file upload completes before proceeding
+- ✅ **Error handling**: `AsyncValue.guard()` handles errors from both API calls
+
+### Event Mixin Pattern for File Selection
+
+**4. Handle file picker in event mixin** (using `ImagePickerUtils`):
+
+```dart
+mixin class InfoPersonalEvent {
+  void setProfileImagePath(WidgetRef ref, String? imagePath) {
+    ref.read(profileImagePathProvider.notifier).state = imagePath;
+  }
+
+  Future<void> pickImage(BuildContext context, WidgetRef ref) async {
+    final imagePath = await ImagePickerUtils.pickImage(context);
+    if (imagePath != null) {
+      setProfileImagePath(ref, imagePath);
+    }
+  }
+}
+```
+
+**Key Points:**
+- ✅ **Reusable Utility**: Use `ImagePickerUtils.pickImage(context)` from `lib/src/utils/image_picker_utils.dart`
+- ✅ **Android lost data handling**: Utility automatically handles `retrieveLostData()` on Android
+- ✅ **Bottom sheet UI**: Utility shows options for Gallery or Camera
+- ✅ **Store path in StateProvider**: Use setter method to update state with returned path
+- ✅ **Context safety**: Utility checks `context.mounted` before navigation-dependent operations
+- ✅ **DRY Principle**: Single implementation used across all features (profile, report, task remarks, etc.)
+
+### Image Picker Utility
+
+**Global utility for image selection** (`image_picker_utils.dart`):
+
+```dart
+class ImagePickerUtils {
+  ImagePickerUtils._();
+
+  /// Shows a bottom sheet to select image source (Gallery or Camera)
+  /// and returns the selected image file path.
+  ///
+  /// Handles Android MainActivity destruction by checking for lost data.
+  ///
+  /// Returns `null` if user cancels or no image is selected.
+  static Future<String?> pickImage(BuildContext context) async {
+    // ... implementation handles lost data, shows picker, returns path
+  }
+}
+```
+
+**Benefits:**
+- **DRY Principle**: Single implementation used across all features
+- **Consistent UX**: Same picker UI and behavior everywhere
+- **Centralized Maintenance**: Bug fixes and improvements in one place
+- **Android Lost Data**: Automatically handles MainActivity destruction recovery
+- **Simple API**: Just call `ImagePickerUtils.pickImage(context)` and get the path
+
+### UI Layer Pattern for File Display
+
+**5. Display selected file or original from API** (`info_personal_screen.dart` lines 110‑148):
+
+```dart
+Consumer(
+  builder: (context, consRef, child) {
+    final profileImagePath = consRef.watch(profileImagePathProvider);
+    
+    return GestureDetector(
+      onTap: () => pickImage(context, consRef),
+      child: Stack(
+        children: [
+          Container(
+            width: 100.w,
+            height: 100.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColorTheme.blackRock100, width: 2),
+            ),
+            child: ClipOval(
+              child: profileImagePath != null
+                  ? Image.file(File(profileImagePath), fit: BoxFit.cover)
+                  : !CommonUtils.isEmpty(originalImageUrl)
+                      ? CachedNetworkImage(
+                          imageUrl: originalImageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) => Image.asset(AssetsConstant.avatar),
+                        )
+                      : Icon(Icons.person, size: 50.w, color: AppColorTheme.blackRock300),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.all(4.w),
+              decoration: BoxDecoration(
+                color: AppColorTheme.primary500,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.camera_alt, size: 20.w, color: AppColorTheme.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+)
+```
+
+**Key Points:**
+- ✅ **Priority order**: Show selected file → original from API → placeholder icon
+- ✅ **Use `Image.file()`**: Display local file using `File(imagePath)`
+- ✅ **Use `CachedNetworkImage`**: Display original image from API URL
+- ✅ **Wrap in Consumer**: Rebuild when `profileImagePathProvider` changes
+
+### Complete Flow Summary
+
+1. **User taps image picker** → `pickImage(context, ref)` called from UI
+2. **Event mixin shows bottom sheet** → User selects Gallery or Camera
+3. **Image picked** → Path stored in `profileImagePathProvider` via `setProfileImagePath()`
+4. **UI updates** → Consumer rebuilds, showing selected image
+5. **Form submitted** → Event mixin reads `profileImagePathProvider` and passes to controller
+6. **Controller uploads file** → Conditionally calls `changeProfilePictureProvider` if path is not null
+7. **Controller updates data** → Calls main update API (e.g., `editProfileProvider`)
+
+**Reference Examples:**
+- `info_personal_repository.dart` lines 40‑67: File upload repository method
+- `info_personal_controller.dart` lines 19‑57: Conditional file upload in controller
+- `info_personal_event.dart` lines 38‑100: Image picker with Android lost data handling
+- `info_personal_screen.dart` lines 110‑148: File display with priority order
+
+## Multiple Mixins in Single Widget
+
+Widgets can use multiple mixins from different features when they need to access multiple feature states/events.
+
+### Pattern
+
+```dart
+class HomeSubscreen extends ConsumerWidget
+    with HomeEvent, HomeState, MyReportState, MyReportEvent, LocalizationMixin {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = getLocalizations(ref); // From LocalizationMixin
+    final newsList = getNewsList(ref); // From HomeState
+    final reportList = getMyReportList(ref, page: 1); // From MyReportState
+    
+    // Can call methods from any mixin
+    goToNewsDetail(ref, newsId); // From HomeEvent
+    goToReportDetail(ref, reportItem, true); // From MyReportEvent
+  }
+}
+```
+
+**Key Points:**
+- ✅ **Multiple feature mixins**: Widgets can mix multiple `*_Event` and `*_State` mixins
+- ✅ **Order doesn't matter**: Mixin order is not significant for functionality
+- ✅ **Avoid conflicts**: Ensure method names don't conflict across mixins
+- ✅ **Common mixins**: `LocalizationMixin` is commonly used alongside feature mixins
+
+## Provider Naming
+
+- Repository providers: `*RepositoryProvider` (e.g., `authRepositoryProvider`)
+- State providers: `*Provider` (e.g., `localeProvider`)
+- Future providers: `*Provider` (e.g., `newsListProvider`)

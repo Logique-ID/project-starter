@@ -1,3 +1,10 @@
+# 0.2.4
+
+## Changes
+
+### Improvements
+- **Add Windsurf Rules**: Added generated `.windsurfrules` to the starter template.
+
 # 0.2.3
 
 ## Changes

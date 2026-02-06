@@ -3,6 +3,65 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
+        /// Build apk for each flavor
+        {
+            "type": "shell",
+            "command": "flutter",
+            "group": "build",
+            "args": [
+                "build",
+                "apk",
+                "-t",
+                "lib/main_dev.dart",
+                "--flavor",
+                "dev",
+                "--profile",
+                "--target-platform",
+                "android-arm64",
+                "--split-per-abi"
+            ],
+            "problemMatcher": [],
+            "label": "Build apk (dev)",
+        },
+        {
+            "type": "shell",
+            "command": "flutter",
+            "group": "build",
+            "args": [
+                "build",
+                "apk",
+                "-t",
+                "lib/main_stg.dart",
+                "--flavor",
+                "stg",
+                "--profile",
+                "--target-platform",
+                "android-arm64",
+                "--split-per-abi"
+            ],
+            "problemMatcher": [],
+            "label": "Build apk (stg)",
+        },
+        {
+            "type": "shell",
+            "command": "flutter",
+            "group": "build",
+            "args": [
+                "build",
+                "apk",
+                "-t",
+                "lib/main_prod.dart",
+                "--flavor",
+                "prod",
+                "--release",
+                "--target-platform",
+                "android-arm64",
+                "--split-per-abi"
+            ],
+            "problemMatcher": [],
+            "label": "Build apk (prod)",
+        },
+        /// Create feature using mason
         {
             "type": "shell",
             "command": "mason",
